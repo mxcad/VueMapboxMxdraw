@@ -5,11 +5,13 @@
 
 点击[演示示例](https://www.mxdraw3d.com/sample/vuemapbox/?cmd=Mx_CADGISDemo&autoinit=n)查看效果
 
-点击[下载源码]() 
+点击[下载示例源码](https://github.com/mxcad/VueMapboxMxdraw/archive/refs/heads/main.zip) 
 
 mapbox-gl.js是通过webgl渲染交互式地图的js库 利用mapbox提供的自定义图层实现渲染mxdraw中的CAD图纸(three.js 场景)。
 
 如果不了解mapbox-gl.js可以参考中文[官方文档](http://www.mapbox.cn/mapbox-gl-js/api/) / [国际站](https://www.mapbox.com/)
+
+> [什么是mxdraw?](https://mxcadx.gitee.io/mxdraw_docs/)
 
 下面代码是mapbox和mxdraw结合使用的示例代码。
 
@@ -159,9 +161,9 @@ map.on('style.load', ()=> {
 })
 ```
 
-## mapbox配合其他GIS库结合使用
+## mapbox集成更多其他GIS库的能力
 
-### mapbox结合 L7框架
+### mapbox 与 L7框架
 
 我们可以在mapbox基础上扩展L7框架的能力 使mapbox的功能更加强大
 
@@ -169,7 +171,7 @@ L7 是由蚂蚁金服 AntV 数据可视化团队推出的基于 WebGL 的开源�
 
 点击 [AntV L7 官方文档](https://antv-l7.gitee.io/zh/docs/api/l7) 查看使用L7提供的功能
 
-以下是简单的L7结合mapbox的扩展示例代码：
+以下是简单的L7结合mapbox的集成代码：
 
 ```html
 <div id="map"></div>
@@ -177,9 +179,9 @@ L7 是由蚂蚁金服 AntV 数据可视化团队推出的基于 WebGL 的开源�
 
 ```js
 import { Scene, Mapbox } from "@antv/l7"
-import { MxMapBox } from "@/mapbox/init"
 import mapboxgl from "mapbox-gl";
 // 首先创建mapbox地图
+mapboxgl.accessToken = "pk.eyJ1IjoibWFvcmV5IiwiYSI6ImNqNWhrenIwcDFvbXUyd3I2bTJxYzZ4em8ifQ.KHZIehQuWW9AsMaGtATdwA"
 const map = new mapboxgl.Map({
     container: 'map',
     center,
@@ -193,14 +195,14 @@ const l7Scene = new Scene({
     logoVisible: false,
     // 这里提供mapbox的地图
     map: new Mapbox({
-        mapInstance: map,
+        mapInstance: map
     })
 })
 ```
 
 按照上述代码，在mapbox地图上就可以使用L7提供的能力了。
 
-更加具体的代码请参考源码示例只L7文件夹中代码 点击查看：[github](https://github.com/mxcad/VueMapboxMxdraw/tree/main/src/L7) / [gitee](https://gitee.com/mxcadx/VueMapboxMxdraw/tree/main/src/L7)
+更加详细的代码请参考源码示例中L7文件夹的代码 点击查看：[github](https://github.com/mxcad/VueMapboxMxdraw/tree/main/src/L7) / [gitee](https://gitee.com/mxcadx/VueMapboxMxdraw/tree/main/src/L7)
 
 
 
