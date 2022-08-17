@@ -1,0 +1,19 @@
+diff --git a/node_modules/mapbox-gl-draw-scale-rotate-mode/src/index.js b/node_modules/mapbox-gl-draw-scale-rotate-mode/src/index.js
+index ab703c0..c86a6e1 100644
+--- a/node_modules/mapbox-gl-draw-scale-rotate-mode/src/index.js
++++ b/node_modules/mapbox-gl-draw-scale-rotate-mode/src/index.js
+@@ -507,11 +507,12 @@ SRMode.onSetup = function (opts) {
+   });
+ 
+   var _this = this;
+-  this.map.loadImage(rotate.default, function (error, image) {
++
++  this.map.loadImage(rotate.default || rotate, function (error, image) {
+     if (error) throw error;
+     _this.map.addImage('rotate', image);
+   });
+-  this.map.loadImage(scale.default, function (error, image) {
++  this.map.loadImage(scale.default || scale, function (error, image) {
+     if (error) throw error;
+     _this.map.addImage('scale', image);
+   });

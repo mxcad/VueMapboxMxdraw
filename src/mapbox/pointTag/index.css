@@ -1,0 +1,533 @@
+
+/* 各种点标记的样式 */
+
+@keyframes warn {
+    0% {
+        -webkit-transform: scale(0);
+        -moz-transform: scale(0);
+        -o-transform: scale(0);
+        transform: scale(0);
+        opacity: 1
+    }
+
+    100% {
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -o-transform: scale(1);
+        transform: scale(1);
+        opacity: 0
+    }
+}
+
+@keyframes dots {
+    0% {
+        transform: rotate(0) scale(0.7,0.7)
+    }
+
+    50% {
+        transform: rotate(180deg) scale(1,1)
+    }
+
+    100% {
+        transform: rotate(360deg) scale(0.7,0.7)
+    }
+}
+
+@keyframes dots2 {
+    0% {
+        transform: rotate(0) scale(0.7,0.7)
+    }
+
+    50% {
+        transform: rotate(-180deg) scale(1,1)
+    }
+
+    100% {
+        transform: rotate(-360deg) scale(0.7,0.7)
+    }
+}
+
+@keyframes halo {
+    0% {
+        transform: rotate(360deg) scaleX(1)
+    }
+
+    100% {
+        transform: rotate(0) scaleX(1.1)
+    }
+}
+
+@keyframes halo2 {
+    0% {
+        transform: rotate(360deg) scaleX(0.9)
+    }
+
+    100% {
+        transform: rotate(90deg) scaleX(1.1)
+    }
+}
+
+@keyframes clipMe1 {
+    0%,100% {
+        clip: rect(0,var(--clip-width-1),2px,0)
+    }
+
+    25% {
+        clip: rect(0,2px,var(--clip-height-1),0)
+    }
+
+    50% {
+        clip: rect(var(--clip-height-2),var(--clip-width-1),var(--clip-width-1),0)
+    }
+
+    75% {
+        clip: rect(0,var(--clip-width-1),var(--clip-height-1),var(--clip-width-2))
+    }
+}
+
+@keyframes clipMe2 {
+    0%,100% {
+        clip: rect(0,var(--clip-width-1),2px,0)
+    }
+
+    25% {
+        clip: rect(0,2px,var(--clip-height-1),0)
+    }
+
+    50% {
+        clip: rect(var(--boder-height),var(--clip-width-1),var(--clip-height-1),0)
+    }
+
+    75% {
+        clip: rect(0,var(--clip-width-1),var(--clip-height-1),var(--clip-width-2))
+    }
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 8px 6px transparent
+    }
+
+    50% {
+        box-shadow: 0 0 8px 6px var(--box-shadow-color)
+    }
+
+    100% {
+        box-shadow: 0 0 8px 6px transparent
+    }
+}
+/* 点的名称 */
+.point-tag-name {
+    position: absolute;
+    color: #ccc;
+    left: 0;
+    height: 0;
+    top: -10px;
+    width: 11px;
+    font-size: 14px;
+    transition: all .5s ease-in-out;
+}
+.point-tag-name> span {
+    width: 80px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 2px;
+    white-space: nowrap;
+    padding-left: 14px;
+}
+
+/* 点标记文字边框 */
+.point-tag-text-boder  {
+    --boder-width: 100px;
+    --text-left-position: -50px;
+    --boder-height: 30px;
+    --clip-width-1: 110px;
+    --clip-width-2: 108px;
+    --clip-height-1: 40px;
+    --clip-height-2: 38px;
+    --border-color: #1890ff;
+    --box-shadow-color: rgba(24,144,255,0.73);
+    --text-color: #ccc;
+    --text-font-size: 14px;
+    --animation-name: clipMe1;
+}
+.point-tag-boder, .point-tag-boder::before, .point-tag-boder::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.point-tag-boder {
+    width: var(--boder-width);
+    height: var(--boder-height);
+    color: var(--border-color);
+    box-shadow: inset 0 0 0 1px var(--box-shadow-color);
+    margin: auto;
+    left: var(--text-left-position);
+}
+
+
+.point-tag-boder::before, .point-tag-boder::after {
+    content: '';
+    z-index: -1;
+    margin: -5%;
+    box-shadow: inset 0 0 0 2px;
+    animation: var(--animation-name) 8s linear infinite;
+}
+.point-tag-boder::before {
+    animation-delay: -4s;
+}
+
+.point-tag-text {
+    color: var(--text-color);
+    font-size: var(--text-font-size);
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-weight: bolder;
+}
+
+/* 呼吸的光圈 */
+.aperture_breath {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+    opacity: 1;
+    transition: opacity .2s;
+}
+.aperture_breath_point {
+    position: absolute;
+    left: -3px;
+    top: -3px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    opacity: 1
+}
+.aperture_breath_pulse {
+    position: absolute;
+    border: 2px solid;
+    border-radius: 48px;
+    opacity: .12;
+    filter: alpha(opacity=0);
+    animation: warn 2s ease-out both;
+    animation-iteration-count: infinite;
+    background: 0;
+    border-color: #009fd9;
+    top: -44px;
+    left: -44px;
+    height: 88px;
+    width: 88px;
+}
+.aperture_breath__delay-01 {
+    animation-delay: 1.2s !important;
+}
+.aperture_breath__delay-02  {
+    animation-delay: 1.6s !important;
+}
+.aperture_breath__delay-03 {
+    animation-delay: 2s !important;
+}
+.aperture_breath_name {
+    padding: 6px 10px;
+    position: absolute;
+    color: #ccc;
+    left: 0;
+    height: 0;
+    top: -10px;
+    width: 11px;
+    font-size: 14px;
+    transition: all .5s ease-in-out;
+}
+.aperture_breath_name_container {
+    width: 80px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 2px;
+    white-space: nowrap;
+    padding-left: 20px;
+}
+
+
+
+/* 扩散点 */
+.diffusion-dot {
+    width: var(--container-width);
+    height: var(--container-width);
+    border-radius: 50%;
+    background-color: var(--background-color);
+    position: relative;
+}
+
+.diffusion-dot-bg {
+    width: var(--container-width);
+    height: var(--container-width);
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    animation: pulse 3s infinite;
+}
+
+.diffusion-dot-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+}
+
+.diffusion-dot-name {
+    left: var(--container-width);
+    top: calc(var(--container-width) / 2 - 10px);
+    position: absolute;
+    color: #ccc;
+    width: 11px;
+    font-size: 14px;
+    transition: all .5s ease-in-out;
+}
+
+.diffusion-dot-name>span {
+    width: 80px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 2px;
+    white-space: nowrap;
+    padding-left: 0;
+}
+
+/* 荧光点 */
+.phosphor-dot-fluorescence {
+    width: var(--container-width);
+    height: var(--container-width);
+    border-radius: 100%;
+    background-color: var(--light-color);
+    box-shadow: var(--light-color) 0 0 var(--container-width) var(--container-width),var(--box-shadow-color) 0 0 var(--box-shadow-width) var(--box-shadow-width);
+}
+
+.phosphor-dot-box {
+    position: absolute;
+    color: #ccc;
+    left: 0;
+    height: 0;
+    top: -10px;
+    width: 11px;
+    font-size: 14px;
+    transition: all .5s ease-in-out;
+}
+
+.phosphor-dot-box-name{
+    width: 80px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 2px;
+    white-space: nowrap;
+    padding-left: 14px;
+}
+
+
+/* 发光的光环 */
+
+.glowing-halo-item {
+    position: absolute;
+    left: var(--halo-left);
+    top: var(--halo-left);
+    transform: translate3d(-50%,-50%,0);
+    border-radius: 100%;
+    width: var(--halo-width);
+    height: var(--halo-width);
+    -webkit-transform: scale(1);
+}
+
+.glowing-halo-1, .glowing-halo-2, .glowing-halo-3, .glowing-halo-4, .glowing-halo-5, .glowing-halo-6, .glowing-halo-7, .glowing-halo-8:before {
+    border: 1px solid var(--color-1);
+    box-shadow: 0 0 var(--box-shadow-width-1) var(--color-1-transparent),0 0 var(--box-shadow-width-2) var(--color-1-transparent), inset 0 0 var(--box-shadow-width-1) var(--color-1-transparent),inset 0 0 var(--box-shadow-width-2) var(--color-1-transparent);
+}
+.glowing-halo-1 {
+    animation: halo 3.5s infinite alternate-reverse;
+}
+.glowing-halo-2 {
+    animation: halo 2s infinite alternate-reverse;
+}
+.glowing-halo-3{
+    animation: halo2 4s infinite alternate-reverse;
+}
+.glowing-halo-4{
+    animation: halo 7s infinite alternate-reverse;
+}
+.glowing-halo-5{
+    animation: halo2 5s infinite alternate;
+}
+.glowing-halo-6{
+    animation: halo 2s infinite alternate-reverse;
+}
+.glowing-halo-7{
+    animation: halo2 5s infinite alternate;
+}
+.glowing-halo-8 {
+    animation: halo 10s infinite alternate-reverse;
+}
+.glowing-halo-name {
+    top: -10px;
+    left: calc(var(--halo-width) / 2);
+    position: absolute;
+    color: #ccc;
+    left: 0;
+    height: 0;
+    top: -10px;
+    width: 11px;
+    font-size: 14px;
+    transition: all .5s ease-in-out;
+}
+
+.glowing-halo-name>span {
+    width: 80px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 2px;
+    white-space: nowrap;
+    padding-left: 14px;
+}
+
+/* 旋转的光环 */
+
+
+
+.rotating-halo__dots {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    bottom: 0px;
+    left: 0px;
+    width: var(--dots-width);
+    height: var(--dots-height);
+    box-shadow: var(--dots-box-shadow-x-negative) 0 0 var(--dots-box-shadow-radius1-negative) var(--light-color),var(--dots-box-shadow-x-negative) 0 4px var(--dots-box-shadow-radius2-negative) var(--color),var(--dots-box-shadow-x) 0 0 var(--dots-box-shadow-radius1-negative) var(--light-color),var(--dots-box-shadow-x) 0 4px var(--dots-box-shadow-radius2-negative) var(--color),0 var(--dots-box-shadow-x-negative) 0 var(--dots-box-shadow-radius1-negative) var(--light-color),0 var(--dots-box-shadow-x-negative) 4px var(--dots-box-shadow-radius2-negative) var(--color),0 var(--dots-box-shadow-x) 0 var(--dots-box-shadow-radius1-negative) var(--light-color),0 var(--dots-box-shadow-x) 4px var(--dots-box-shadow-radius2-negative) var(--color),0 0 4px 4px var(--color),0 0 4px 8px var(--line-color);
+    border-radius: 50%;
+    margin: auto;
+}
+.rotating-halo__dots:before, .rotating-halo__dots :after {
+    content: '';
+    position: absolute;
+    display: block;
+    height: inherit;
+    width: inherit;
+    border-radius: inherit;
+}
+.rotating-halo__dots-01 {
+    animation: dots 4s linear infinite;
+}
+.rotating-halo__dots-01:before {
+    transform: rotate(8deg);
+}
+.rotating-halo__dots-02 {
+    animation: dots2 4s linear infinite;
+} 
+.rotating-halo__dots-02:before {
+    transform: rotate(73deg);
+}
+.rotating-halo__dots-03 {
+    animation: dots 4s linear infinite;
+}
+.rotating-halo__dots-03:before {
+    transform: rotate(39deg);
+}
+
+.rotating-halo-dots-name {
+    left: var(--container-width);
+    top: -10px;
+}
+.rotating-halo__dots::before, .rotating-halo__dots::after {
+    box-shadow: var(--dots-box-shadow-x-negative) 0 0 var(--dots-box-shadow-radius1-negative) var(--light-color),var(--dots-box-shadow-x-negative) 0 4px var(--dots-box-shadow-radius2-negative) var(--color),var(--dots-box-shadow-x) 0 0 var(--dots-box-shadow-radius1-negative) var(--light-color),var(--dots-box-shadow-x) 0 4px var(--dots-box-shadow-radius2-negative) var(--color),0 var(--dots-box-shadow-x-negative) 0 var(--dots-box-shadow-radius1-negative) var(--light-color),0 var(--dots-box-shadow-x-negative) 4px var(--dots-box-shadow-radius2-negative) var(--color),0 var(--dots-box-shadow-x) 0 var(--dots-box-shadow-radius1-negative) var(--light-color),0 var(--dots-box-shadow-x) 4px var(--dots-box-shadow-radius2-negative) var(--color);
+}
+
+
+/* 右键菜单 */
+
+.right-clikc-menu {
+    font-size: 13px;
+    padding: 8px 0;
+    background: #252526;
+    box-shadow: 1px 1px 10px #000;
+    border-radius: 3px;
+    margin: 0;
+    list-style: none;
+    color: #ccccc1; 
+}
+.right-clikc-menu .menu-itme-multi {
+    display: flex;
+    position: relative;
+}
+
+.menu-itme-multi .menu-itme-multi-li {
+    flex: auto;
+    display: block;
+    padding: 5px 8px;
+    cursor: default
+}
+.right-clikc-menu .right-clikc-menu-li:hover {
+    background-color: #009fd9;
+}
+
+.right-clikc-menu .menu-itme {
+    display: block;
+    padding: 5px 8px;
+    cursor: default;
+    text-align: left;
+}
+
+.right-clikc-menu .seperator {
+    display: block;
+    width: 100%;
+    height: 1px;
+    background: #999;
+}
+.right-clikc-menu .menu-submenu div.right-clikc-menu-li{
+    padding: 5px 8px;
+    cursor: default;
+}
+.hover-menu-itme {
+    padding: 5px 8px;
+    cursor: default;
+}
+.right-clikc-menu .submenu-box {
+    padding: 0;
+    margin: 0;
+    background: #1b1b1c;
+    border-radius: 3px;
+    width: 100%;
+    height: auto;
+    max-height: 1000px;
+    transition: max-height .5s;
+    overflow: hidden;
+}
+
+.submenu-box-hidden {
+    max-height: 0 !important;
+}
+
+
+
+.hover-menu-itme .hover-menu-box {
+    display: none;
+}
+
+.hover-menu-itme:hover>.hover-menu-box {
+    display: block;
+    position: absolute;
+    left: 60%;
+    bottom: 0;
+    background: #252526;
+    box-shadow: 1px 1px 10px #000;
+    border-radius: 3px;
+    padding: 8px 0;
+    width: 100%;
+    z-index: 1000;
+    list-style: none;
+}

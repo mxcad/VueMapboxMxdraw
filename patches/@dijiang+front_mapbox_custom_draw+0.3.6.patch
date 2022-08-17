@@ -1,0 +1,205 @@
+diff --git a/node_modules/@dijiang/front_mapbox_custom_draw/dist/index-es.js b/node_modules/@dijiang/front_mapbox_custom_draw/dist/index-es.js
+index 0122160..04f755c 100644
+--- a/node_modules/@dijiang/front_mapbox_custom_draw/dist/index-es.js
++++ b/node_modules/@dijiang/front_mapbox_custom_draw/dist/index-es.js
+@@ -1912,6 +1912,7 @@ var DrawFreeLine = /** @class */ (function (_super) {
+         _this.mouseDown = function (_a) {
+             var _b = _a.lngLat, lng = _b.lng, lat = _b.lat;
+             var _c = _this, _map = _c._map, points = _c.points, _drawer = _c._drawer, moveingPoint = _c.moveingPoint, mouseUp = _c.mouseUp;
++          
+             points.push([lng, lat]);
+             /* mapbox-gl-draw 官方bug issue#654，simple_select状态无法禁用drag */
+             _drawer.changeMode('draw_line_string');
+@@ -1924,11 +1925,13 @@ var DrawFreeLine = /** @class */ (function (_super) {
+             var _c = _this, points = _c.points, calculate = _c.calculate;
+             points.push([lng, lat]);
+             calculate();
++           
+         }, 50);
+         _this.mouseUp = function () {
+             var _a = _this, _map = _a._map, _drawer = _a._drawer, moveingPoint = _a.moveingPoint, mouseUp = _a.mouseUp, currentId = _a.currentId, points = _a.points, endCb = _a.endCb;
+             _map.off('mousemove', moveingPoint);
+             _map.off('mouseup', mouseUp);
++          
+             _drawer.changeMode('simple_select', { featureIds: [currentId] });
+             _this.currentId = null;
+             points.length = 0;
+@@ -2062,7 +2065,7 @@ var color = ['get', 'user__color'], opacity = ['get', 'user__opacity'], outColor
+ // ];
+ // const textFont = ["arial-unicode-ms-regular"];
+ // const textFont = ["arial-unicode-ms-bold"];
+-var textFont = ['arial-unicode-ms-regular'];
++var textFont = ["Open Sans Semibold"];
+ /**
+  *
+  * 基于mapbox-gl-draw@5.1.6 修改
+@@ -2136,8 +2139,8 @@ var styles = [
+             'line-join': 'round'
+         },
+         paint: {
+-            'line-color': outColor,
+-            'line-width': outWidth
++            'line-color': ['case', ['to-boolean', outColor], outColor, baseColor],
++            'line-width': ['case', ['==', outWidth, 0], 0, ['to-boolean', outWidth], outWidth, 2]
+         }
+     },
+     {
+@@ -2168,8 +2171,8 @@ var styles = [
+             'line-join': 'round'
+         },
+         paint: {
+-            'line-color': color,
+-            'line-width': width
++            'line-color': ['case', ['to-boolean', color], color, baseColor],
++            'line-width': ['case', ['==', outWidth, 0], 0, ['to-boolean', width], width, 2]
+         }
+     },
+     {
+@@ -2245,8 +2248,8 @@ var styles = [
+             ['!=', 'user__type', 'measure_result_text']
+         ],
+         paint: {
+-            'circle-radius': size,
+-            'circle-color': color
++            'circle-radius': ['case', ['to-boolean', size], size, 3],
++            'circle-color': ['case', ['to-boolean', color], color, baseColor]
+         }
+     },
+     {
+@@ -2286,8 +2289,8 @@ var styles = [
+         type: 'fill',
+         filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],
+         paint: {
+-            'fill-color': '#404040',
+-            'fill-outline-color': '#404040',
++            'fill-color': "#404040",
++            'fill-outline-color': "#404040",
+             'fill-opacity': 0.1
+         }
+     },
+@@ -2300,7 +2303,7 @@ var styles = [
+             'line-join': 'round'
+         },
+         paint: {
+-            'line-color': '#404040',
++            'line-color': "#404040",
+             'line-width': 2
+         }
+     },
+@@ -2313,7 +2316,7 @@ var styles = [
+             'line-join': 'round'
+         },
+         paint: {
+-            'line-color': '#404040',
++            'line-color': "#404040",
+             'line-width': 2
+         }
+     },
+@@ -2323,7 +2326,7 @@ var styles = [
+         filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Point']],
+         paint: {
+             'circle-radius': 5,
+-            'circle-color': '#404040'
++            'circle-color': "#404040"
+         }
+     },
+     /**
+@@ -2464,6 +2467,7 @@ var MapboxDrawer = /** @class */ (function () {
+             });
+             return styles;
+         };
++        
+         this.selectCb = function (_a) {
+             var features = _a.features;
+             var _b = _this, currentSelectId = _b.currentSelectId, selectCbFn = _b.selectCbFn, getStyleTemplate = _b.getStyleTemplate, measure_result_type = _b.measure_result_type, _draw = _b._draw;
+@@ -2492,13 +2496,22 @@ var MapboxDrawer = /** @class */ (function () {
+         };
+         this._map = map;
+         this._option = option;
+-        this.init();
++        this.init(option.styles || []);
+     }
+-    MapboxDrawer.prototype.init = function () {
++    MapboxDrawer.prototype.init = function (_styles) {
+         var _a = this, map = _a._map, _option = _a._option;
+-        var _draw = new MapboxGlDraw(__assign(__assign({}, _option), { userProperties: true, styles: styles }));
++        // { userProperties: true, styles: styles }
++        _styles.forEach((style)=> {
++           let index = styles.findIndex(({id})=> id === style.id)
++           if(index > 1) {
++             styles[index] = style
++           }else {
++             styles.push(style)
++           }
++        })
++        var _draw = new MapboxGlDraw(__assign(__assign({}, _option), { userProperties: true, styles: styles}));
+         /* 手动执行安装函数避免添加ui，此函数为自定义控制器初始化，返回一个dom */
+-        _draw.onAdd(map);
++        // _draw.onAdd(map);
+         this._draw = _draw;
+         //     map.on("draw.update", e => console.log("update", e));
+         // map.on("draw.selectionchange", e => console.log("selectionchange", e));
+@@ -2651,6 +2664,16 @@ var MapboxDrawer = /** @class */ (function () {
+     MapboxDrawer.prototype.getAll = function () {
+         return this._draw.getAll();
+     };
++
++    // 获取初始化前全局样式
++    MapboxDrawer.getStyles = function() {
++        return styles
++    }
++    
++    // 设置初始化前全局样式样式
++    MapboxDrawer.setStyles = function(_styles) {
++        styles = _styles
++    }
+     // 设置默认样式
+     MapboxDrawer.prototype.setDefaultStyle = function (type, styles) {
+         var defaultStyle = this.defaultStyle;
+@@ -2666,14 +2689,20 @@ var MapboxDrawer = /** @class */ (function () {
+                 throw new Error(type + ": " + key + " - style is not defined");
+         });
+     };
++
++    // 设置字体
++    MapboxDrawer.prototype.setDefaultTextFont = function(font) {
++        textFont = font
++    };
++    
+     // 设置测量，圆半径等文字大小
+     MapboxDrawer.prototype.setDefaultMeasureTextStyle = function (_a) {
+         var textSize = _a.textSize, textOffset = _a.textOffset, textColor = _a.textColor, textHaloBlur = _a.textHaloBlur, textHaloWidth = _a.textHaloWidth, textHaloColor = _a.textHaloColor;
+         this._map.setLayoutProperty('gl-draw-measure_result.cold', 'text-size', textSize);
+-        this._map.setLayoutProperty('gl-draw-measure_result.cold', 'text-offset', textOffset);
++        this._map.setLayoutProperty('gl-draw-measure_result.cold', 'text-offset', textOffset || [0, 0.12]);
+         this._map.setPaintProperty('gl-draw-measure_result.cold', 'text-color', textColor);
+         this._map.setLayoutProperty('gl-draw-measure_result.hot', 'text-size', textSize);
+-        this._map.setLayoutProperty('gl-draw-measure_result.hot', 'text-offset', textOffset);
++        this._map.setLayoutProperty('gl-draw-measure_result.hot', 'text-offset', textOffset || [0, 0.12]);
+         this._map.setPaintProperty('gl-draw-measure_result.hot', 'text-color', textColor);
+         this._map.setPaintProperty('gl-draw-measure_result.cold', 'text-halo-blur', textHaloBlur);
+         this._map.setPaintProperty('gl-draw-measure_result.cold', 'text-halo-width', textHaloWidth);
+diff --git a/node_modules/@dijiang/front_mapbox_custom_draw/dist/index.d.ts b/node_modules/@dijiang/front_mapbox_custom_draw/dist/index.d.ts
+index d29c0b3..1a90e91 100644
+--- a/node_modules/@dijiang/front_mapbox_custom_draw/dist/index.d.ts
++++ b/node_modules/@dijiang/front_mapbox_custom_draw/dist/index.d.ts
+@@ -13,6 +13,11 @@ export default class MapboxDrawer {
+         [prop: string]: any;
+     };
+     measure_result_type: string;
++    /**  获取初始化时mapbox-gl-draw的主题样式 */
++    static getStyles(): any;
++    /**  设置初始前mapbox-gl-draw的主题样式 */
++    static setStyles(styles:any);
++    
+     private _Measure;
+     private _baseDraw;
+     private _drawCircle;
+@@ -41,6 +46,7 @@ export default class MapboxDrawer {
+     setDefaultStyle(type: string, styles: {
+         [props: string]: number | string;
+     }): void;
++    setDefaultTextFont(font: string[]): void;
+     setDefaultMeasureTextStyle({ textSize, textOffset, textColor, textHaloBlur, textHaloWidth, textHaloColor }: {
+         textSize: number;
+         textOffset: number[];

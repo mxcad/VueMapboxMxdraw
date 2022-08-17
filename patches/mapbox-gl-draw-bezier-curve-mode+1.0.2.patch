@@ -1,0 +1,125 @@
+diff --git a/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/directModeBezierOverride.js b/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/directModeBezierOverride.js
+index c8fe8b8..d2b49f3 100644
+--- a/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/directModeBezierOverride.js
++++ b/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/directModeBezierOverride.js
+@@ -15,7 +15,7 @@ import {isAltDown, isCtrlCDown} from '../utils/additional_selectors';
+ import BezierGroup from '../utils/BezierGroup';
+ import BezierNode from '../utils/BezierNode';
+ 
+-const DirectModeBezierOverride = MapboxDraw.modes.direct_select;
++const DirectModeBezierOverride = {...MapboxDraw.modes.direct_select};
+ const isVertex = isOfMetaType(Constants.meta.VERTEX);
+ const isMidpoint = isOfMetaType(Constants.meta.MIDPOINT);
+ let draw=null;
+@@ -120,6 +120,7 @@ DirectModeBezierOverride.onVertex = function (state, e) {
+ };
+ 
+ DirectModeBezierOverride.onMidpoint = function(state, e) {
++  
+   const bezierGroup = getBezierGroup(state);
+   if (bezierGroup) {
+     this.startDragging(state, e);
+@@ -140,6 +141,8 @@ DirectModeBezierOverride.onMidpoint = function(state, e) {
+     state.selectedCoordPaths = [newCoordPath];
+     const selectedCoordinates = this.pathsToCoordinates(state.featureId, state.selectedCoordPaths);
+     this.setSelectedCoordinates(selectedCoordinates);
++  }else {
++    MapboxDraw.modes.direct_select.onMidpoint.call(this, state, e)
+   }
+ };
+ 
+@@ -247,8 +250,13 @@ DirectModeBezierOverride.onKeyDown = function(state, e) {
+ }
+ 
+ DirectModeBezierOverride.onTrash = function(state) {
+-  const bezierGroup = getBezierGroup(state);
+  
++  const bezierGroup = getBezierGroup(state);
++  if(!bezierGroup) {
++    this.deleteFeature([state.featureId]);
++    this.changeMode(Constants.modes.SIMPLE_SELECT, {});
++    return
++  }
+   // Mark Nodes for deletion
+   state.selectedCoordPaths.forEach(coordPath => {
+     const result = bezierGroup.getBezierCurveAndNodeFromCoordPath(coordPath);
+@@ -276,7 +284,6 @@ DirectModeBezierOverride.onMouseMove = function(state, e) {
+   const isFeature = isActiveFeature(e);
+   const onVertex = isVertex(e);
+   const onMidpoint = isMidpoint(e);
+-  
+   const noCoords = state.selectedCoordPaths.length === 0;
+   if (onMidpoint) this.updateUIClasses({ mouse: Constants.cursors.ADD });
+   else if (isFeature && noCoords) this.updateUIClasses({ mouse: Constants.cursors.MOVE });
+@@ -296,7 +303,6 @@ DirectModeBezierOverride.onMouseOut = function(state) {
+   return true;
+ };
+ 
+-
+ DirectModeBezierOverride.onCombineFeatures = function(state) {
+ 
+   if(state.selectedCoordPaths.length===0) return;
+diff --git a/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/simpleSelectModeBezierOverride.js b/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/simpleSelectModeBezierOverride.js
+index f8272f5..96a0f12 100644
+--- a/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/simpleSelectModeBezierOverride.js
++++ b/node_modules/mapbox-gl-draw-bezier-curve-mode/src/lib/modes/simpleSelectModeBezierOverride.js
+@@ -10,10 +10,11 @@ import {isCtrlCDown} from '../utils/additional_selectors';
+ import BezierGroup from '../utils/BezierGroup';
+ 
+ 
+-const SimpleSelectModeBezierOverride = MapboxDraw.modes.simple_select;
++const SimpleSelectModeBezierOverride = {...MapboxDraw.modes.simple_select};
+ 
+ 
+ SimpleSelectModeBezierOverride.dragMove = function(state, e) {
++ 
+   // Dragging when drag move is enabled
+   state.dragMoving = true;
+   e.originalEvent.stopPropagation();
+@@ -32,6 +33,7 @@ SimpleSelectModeBezierOverride.dragMove = function(state, e) {
+ };
+ 
+ SimpleSelectModeBezierOverride.toDisplayFeatures = function(state, geojson, display) {
++  
+     geojson.properties.active = (this.isSelected(geojson.properties.id)) ? Constants.activeStates.ACTIVE : Constants.activeStates.INACTIVE;
+     display(geojson);
+     this.fireActionable();
+@@ -46,12 +48,14 @@ SimpleSelectModeBezierOverride.toDisplayFeatures = function(state, geojson, disp
+ };
+   
+ SimpleSelectModeBezierOverride.onKeyDown = function(state, e) {
++  
+   if (isCtrlCDown(e)){
+     copyBezierGroupToClipboard(this.getSelected());   
+   }
+ }
+ 
+ SimpleSelectModeBezierOverride.onCombineFeatures = function() {
++  
+   const selectedFeatures = this.getSelected();
+ 
+   if (selectedFeatures.length === 0 || selectedFeatures.length < 2) return;
+@@ -83,6 +87,7 @@ SimpleSelectModeBezierOverride.onCombineFeatures = function() {
+ }
+ 
+ SimpleSelectModeBezierOverride.onCombineFeaturesBezier = function(){
++ 
+   const bezierCurves = [];
+   const featuresCombined = [];
+   const selectedFeatures = this.getSelected();
+@@ -126,6 +131,7 @@ SimpleSelectModeBezierOverride.onCombineFeaturesBezier = function(){
+ }
+ 
+ SimpleSelectModeBezierOverride.onCombineFeaturesDefault = function() {
++ 
+   const selectedFeatures = this.getSelected();
+   const coordinates = [], featuresCombined = [];
+   const featureType = selectedFeatures[0].type.replace('Multi', '');
+@@ -166,6 +172,7 @@ SimpleSelectModeBezierOverride.onCombineFeaturesDefault = function() {
+ };
+ 
+ SimpleSelectModeBezierOverride.onUncombineFeatures = function() {
++ 
+   const selectedFeatures = this.getSelected();
+   if (selectedFeatures.length === 0) return;
+ 

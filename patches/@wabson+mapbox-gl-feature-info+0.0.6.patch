@@ -1,0 +1,194 @@
+diff --git a/node_modules/@wabson/mapbox-gl-feature-info/src/controls.js b/node_modules/@wabson/mapbox-gl-feature-info/src/controls.js
+index 795e09f..159a71e 100644
+--- a/node_modules/@wabson/mapbox-gl-feature-info/src/controls.js
++++ b/node_modules/@wabson/mapbox-gl-feature-info/src/controls.js
+@@ -31,7 +31,6 @@ class BaseInfoControl {
+ 
+     onAdd(map) {
+         this._map = map;
+-
+         this._container = document.createElement('div');
+         this._textContainer = document.createElement('div');
+         this._container.className = 'mapboxgl-ctrl mapbox-ctrl-feature-info mapboxgl-custom-control';
+@@ -109,7 +108,12 @@ class BaseInfoControl {
+     }
+ 
+     getFeatureName(feature, state=null) {
+-        state = state || this.drawControl.get(feature.id).properties;
++        if(!state) {
++            const control = this.drawControl.get(feature.id)
++            if(control) {
++                state = control.properties;
++            }  
++        }
+         return state ? state.name : null;
+     }
+ 
+@@ -171,7 +175,11 @@ class BaseEditableInfoControl extends BaseInfoControl {
+         this._editContainer.innerHTML = '<div class="edit-tools">' +
+             this.editToolbarHtml() + '</div>' +
+             '<div class="edit-form">' +
+-            this.editProperties.map((prop) => `<div><label>${prop.label}: <input name="${prop.name}"></label></div>`).join('') +
++            this.editProperties.map((prop) => `<div><label>${prop.label}: 
++            <input ${(prop.min && prop.type === 'number') ? 'min=' + ((prop.name === "_opacity") ? 0 : prop.min) : ((prop.name === "_opacity") ? 'min="0"': '') }  
++            ${(prop.max && prop.type === 'number') ? 'max=' + ((prop.name === "_opacity") ? 1 : prop.max) : ((prop.name === "_opacity") ? 'max="1"': '') }
++            ${(prop.step && prop.type === 'number') ? 'step=' + ((prop.name === "_opacity") ? 0.1 : prop.step) : ((prop.name === "_opacity") ? 'step="0.1"': '') }
++            type="${prop.type || 'text'}" name="${prop.name}"></label></div>`).join('') +
+             '<div><button type="button" data-btn-action="ok">OK</button><button type="button" data-btn-action="cancel">Cancel</button></div></div>';
+         this._container.appendChild(this._editContainer);
+ 
+@@ -202,9 +210,17 @@ class BaseEditableInfoControl extends BaseInfoControl {
+ 
+     showEditForm() {
+         this._editContainer.querySelector('.edit-form').style.display = 'block';
+-        const firstPropertyInput = this._editContainer.querySelector('input');
+-        if (firstPropertyInput) {
+-            firstPropertyInput.focus();
++        const firstPropertyInputs = this._editContainer.querySelectorAll('input');
++        const selectedFeature = this.drawControl.getSelected().features[0];
++        if(selectedFeature && selectedFeature.properties) {
++            firstPropertyInputs.forEach((inputEl)=> {
++                const value = selectedFeature.properties[inputEl.name]
++               if(value) inputEl.value = value.toString()
++            })
++        }
++       
++        if (firstPropertyInputs.length > 0) {
++            firstPropertyInputs[0].focus();
+         }
+     }
+ 
+@@ -234,9 +250,12 @@ class BaseEditableInfoControl extends BaseInfoControl {
+         const selectedFeatures = this.drawControl.getSelected().features;
+         for (const inputEl of this._editContainer.querySelectorAll('input')) {
+             for (const feature of selectedFeatures) {
+-                this.drawControl.setFeatureProperty(feature.id, inputEl.name, inputEl.value);
++                if( inputEl.value !== '') {
++                    this.drawControl.setFeatureProperty(feature.id, inputEl.name, inputEl.type === "number" ? Number(inputEl.value) : inputEl.value);
++                }
+             }
+         }
++        this._map.triggerRepaint()
+         this.setFeaturesText(selectedFeatures);
+     }
+ 
+@@ -281,15 +300,15 @@ class LineStringInfoControl extends BaseEditableInfoControl {
+         super(options);
+         this.editActions = this.editActions.concat([{
+             className: 'duplicate-feature',
+-            title: 'Duplicate line',
++            title: '复制',
+             handler: this.onClickDuplicateFeature
+         }, {
+             className: 'add-feature-point',
+-            title: 'Add point to line',
++            title: '续接',
+             handler: this.onClickAddLinePoint
+         }, {
+             className: 'split-line',
+-            title: 'Split line',
++            title: '剪切',
+             handler: this.onClickSplitLine
+         }]);
+     }
+@@ -340,7 +359,6 @@ class LineStringInfoControl extends BaseEditableInfoControl {
+             return;
+         }
+         const newLine = Object.assign({}, selected.features[0]);
+-        newLine.properties = {};
+         delete newLine.id;
+         const newFeatureIds = this.drawControl.add(newLine);
+         this.drawControl.changeMode(
+@@ -411,14 +429,20 @@ class LineStringInfoControl extends BaseEditableInfoControl {
+     }
+ 
+     isSupportedFeatures(features) {
+-        return features.length == 1 && features[0].geometry.type === DrawConstants.geojsonTypes.LINE_STRING;
++        if(!features) {
++            return false
++        }
++        return features.length == 1 && features[0].geometry && features[0].geometry.type === DrawConstants.geojsonTypes.LINE_STRING;
+     }
+ }
+ 
+ class PointInfoControl extends BaseEditableInfoControl {
+ 
+     isSupportedFeatures(features) {
+-        return features.length == 1 && features[0].geometry.type === DrawConstants.geojsonTypes.POINT;
++        if(!features) {
++            return false
++        }
++        return features.length == 1 && features[0].geometry && features[0].geometry.type === DrawConstants.geojsonTypes.POINT;
+     }
+ 
+     getDefaultTitle() {
+@@ -431,27 +455,33 @@ class MultiLineInfoControl extends BaseEditableInfoControl {
+ 
+     constructor(options) {
+         super(options);
+-        this.editActions = [{
++        this.editActions = this.editActions.concat([{
+             className: 'join-lines',
+             title: 'Join lines',
+             handler: this.onClickJoinLines
+-        }];
++        }]);
+     }
+ 
+     orderFeaturesByDistanceToAnother() {
+         const selectedFeatures = this.drawControl.getSelected().features;
+         const coordinates = selectedFeatures.map((feature) => feature.geometry.coordinates);
+-        const joiningDistances = [
+-            length(lineString([coordinates[0][coordinates[0].length - 1], coordinates[1][0]])),
+-            length(lineString([coordinates[1][coordinates[1].length - 1], coordinates[0][0]]))
+-        ];
+-        return (joiningDistances[0] <= joiningDistances[1] ?
+-            [ selectedFeatures[0], selectedFeatures[1] ] : [ selectedFeatures[1], selectedFeatures[0] ]);
++        if(coordinates.length > 1) {
++            const joiningDistances = [
++                length(lineString([coordinates[0][coordinates[0].length - 1], coordinates[1][0]])),
++                length(lineString([coordinates[1][coordinates[1].length - 1], coordinates[0][0]]))
++            ];
++            return (joiningDistances[0] <= joiningDistances[1] ?
++                [ selectedFeatures[0], selectedFeatures[1] ] : [ selectedFeatures[1], selectedFeatures[0] ]);
++        }
++        
+     }
+ 
+     onClickJoinLines(e) {
+         e.preventDefault();
+         const orderedFeatures = this.orderFeaturesByDistanceToAnother();
++        if(!orderedFeatures) {
++            return
++        }
+         const startingFeature = orderedFeatures[0];
+         const removeFeature = orderedFeatures[1];
+         startingFeature.geometry.coordinates = startingFeature.geometry.coordinates.concat(removeFeature.geometry.coordinates);
+@@ -463,7 +493,10 @@ class MultiLineInfoControl extends BaseEditableInfoControl {
+     }
+ 
+     isSupportedFeatures(features) {
+-        return features.length == 2 && features.every((feature) => feature.geometry.type === DrawConstants.geojsonTypes.LINE_STRING);
++        if(!features) {
++            return false
++        }
++        return features.length == 2 && features.every((feature) =>  feature.geometry && feature.geometry.type === DrawConstants.geojsonTypes.LINE_STRING);
+     }
+ 
+     getDefaultTitle() {
+@@ -472,4 +505,4 @@ class MultiLineInfoControl extends BaseEditableInfoControl {
+ 
+ }
+ 
+-export { LineStringInfoControl, MultiLineInfoControl, PointInfoControl };
+\ No newline at end of file
++export { LineStringInfoControl, MultiLineInfoControl, PointInfoControl, BaseEditableInfoControl, BaseInfoControl };
+\ No newline at end of file
+diff --git a/node_modules/@wabson/mapbox-gl-feature-info/src/index.js b/node_modules/@wabson/mapbox-gl-feature-info/src/index.js
+index 098d883..83b0bf7 100644
+--- a/node_modules/@wabson/mapbox-gl-feature-info/src/index.js
++++ b/node_modules/@wabson/mapbox-gl-feature-info/src/index.js
+@@ -1,2 +1,2 @@
+-export { LineStringInfoControl, PointInfoControl, MultiLineInfoControl } from './controls';
++export * from './controls';
+ export { DrawNamedLineMode } from './modes';

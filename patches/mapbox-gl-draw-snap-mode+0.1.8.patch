@@ -1,0 +1,389 @@
+diff --git a/node_modules/mapbox-gl-draw-snap-mode/src/index.js b/node_modules/mapbox-gl-draw-snap-mode/src/index.js
+index ebd06a6..ce30fbc 100644
+--- a/node_modules/mapbox-gl-draw-snap-mode/src/index.js
++++ b/node_modules/mapbox-gl-draw-snap-mode/src/index.js
+@@ -1,5 +1,5 @@
+ export { default as SnapPointMode } from "./modes/snap_point.js";
+ export { default as SnapLineMode } from "./modes/snap_line.js";
+ export { default as SnapPolygonMode } from "./modes/snap_polygon.js";
+-
++export { default as inheritSnap } from "./modes/inheritSnap.js";
+ export { default as SnapModeDrawStyles } from "./utils/customDrawStyles.js";
+diff --git a/node_modules/mapbox-gl-draw-snap-mode/src/modes/inheritSnap.js b/node_modules/mapbox-gl-draw-snap-mode/src/modes/inheritSnap.js
+new file mode 100644
+index 0000000..e73103b
+--- /dev/null
++++ b/node_modules/mapbox-gl-draw-snap-mode/src/modes/inheritSnap.js
+@@ -0,0 +1,175 @@
++import {
++    geojsonTypes,
++    modes,
++    cursors,
++} from "@mapbox/mapbox-gl-draw/src/constants";
++import doubleClickZoom from "@mapbox/mapbox-gl-draw/src/lib/double_click_zoom";
++import {
++    addPointTovertices,
++    createSnapList,
++    getGuideFeature,
++    IDS,
++    shouldHideGuide,
++    snap,
++} from "./../utils";
++
++// 近点 ID
++const NEARPOINT  =  "inherit-snap-near-point"
++function inheritSnap(mode) {
++    const _mode = { ...mode }
++    _mode.onSetup = function (options) {
++        options = options || {};
++        let _state = mode.onSetup.call(this, options)
++        let feature = null, line, point, polygon
++        for (let key in _state) {
++            const val = _state[key]
++            if (val) {
++                if (val.type === "LineString" || val.type === "MultiLineString") {
++                    feature = line = val
++                    break;
++                }
++                else if (val.type === "Point" || val.type === "MultiPoint") {
++                    feature = point = val
++                    break;
++                }
++                else if (val.type === "Polygon" || val.type === "MultiPolygon") {
++                    feature = polygon = val
++                    break;
++                } else if (val.coordinates) {
++                    feature = line = point = polygon = val
++                    break;
++                }
++            } 
++        }
++        const verticalGuide = this.newFeature(getGuideFeature(IDS.VERTICAL_GUIDE));
++        const horizontalGuide = this.newFeature(
++            getGuideFeature(IDS.HORIZONTAL_GUIDE)
++        );
++        // 显示捕捉的就近点
++        const nearPoint= this.newFeature({
++            id: NEARPOINT,
++            type: geojsonTypes.FEATURE,
++            properties: {
++                active: "true"
++            },
++            geometry: {
++              type: geojsonTypes.POINT,
++              coordinates: [[]],
++            },
++        });
++        this.addFeature(verticalGuide);
++        this.addFeature(horizontalGuide);
++        this.addFeature(nearPoint);
++        const selectedFeatures = this.getSelected();
++        this.clearSelectedFeatures();
++        doubleClickZoom.disable(this);
++        const [snapList, vertices] = createSnapList(this.map, this._ctx.api, feature);
++      
++        const state = {
++            ..._state,
++            map: this.map,
++            nearPoint,
++            feature,
++            line: _state.line || line,
++            point: _state.point || point,
++            polygon: _state.polygon || polygon,
++            vertices,
++            snapList,
++            currentVertexPosition: _state.currentVertexPosition || 0,
++            selectedFeatures,
++            verticalGuide,
++            horizontalGuide,
++            direction: _state.direction || 'forward'
++        }
++        state.options = this._ctx.options;
++        const moveendCallback = (...options) => {
++            _state['moveendCallback'] && _state['moveendCallback'].call(this, ...options)
++            const [snapList, vertices] = createSnapList(this.map, this._ctx.api, feature);
++            state.vertices = vertices;
++            state.snapList = snapList;
++        };
++        state["moveendCallback"] = moveendCallback;
++        const optionsChangedCallBAck = (options) => {
++            state.options = options;
++        };
++        state["optionsChangedCallBAck"] = optionsChangedCallBAck;
++        this.map.on("moveend", moveendCallback);
++        this.map.on("draw.snap.options_changed", optionsChangedCallBAck);
++        return state
++    }
++    _mode.onClick = function (state, e) {
++        
++        // We save some processing by rounding on click, not mousemove
++        const lng = state.snappedLng;
++        const lat = state.snappedLat;
++        e.lngLat = {lng, lat}
++   
++        if(state.feature.type === "Point" || state.feature.type === "MultiPoint") {
++            mode.onClick && mode.onClick.call(this, state,  e)
++            return 
++        }
++        
++        // End the drawing if this click is on the previous position
++        // Note: not bothering with 'direction'
++        if (state.currentVertexPosition > 0) {
++            const lastVertex = state.feature.coordinates[state.currentVertexPosition - 1];
++
++            state.lastVertex = lastVertex;
++            
++            if (lastVertex && lastVertex[0] === lng && lastVertex[1] === lat) {
++                mode.onClick && mode.onClick.call(this, state,  e)
++                return this.changeMode(modes.SIMPLE_SELECT, {
++                    featureIds: [state.feature.id],
++                  });
++            }
++        }
++        addPointTovertices(state.map, state.vertices, { lng, lat });
++        // const point = state.map.project({ lng: lng, lat: lat });
++        mode.onClick && mode.onClick.call(this, state,  e)    
++    }
++    _mode.onMouseMove = function (state, e) {
++        
++        const {lng, lat} = snap(state, e);
++        e.lngLat = {lng, lat}
++        state.snappedLng = lng;
++        state.snappedLat = lat;
++        state.nearPoint && state.nearPoint.updateCoordinate('', lng, lat)
++        mode.onMouseMove && mode.onMouseMove.call(this, state, e)
++        if (
++            state.lastVertex &&
++            state.lastVertex[0] === lng &&
++            state.lastVertex[1] === lat
++        ) {
++            this.updateUIClasses({ mouse: cursors.POINTER });
++
++            // cursor options:
++            // ADD: "add"
++            // DRAG: "drag"
++            // MOVE: "move"
++            // NONE: "none"
++            // POINTER: "pointer"
++        } else {
++            this.updateUIClasses({ mouse: cursors.ADD });
++        }
++        
++    }
++    _mode.toDisplayFeatures = function (state, geojson, display) {
++        if (shouldHideGuide(state, geojson)) return;
++        // This relies on the the state of SnapLineMode being similar to DrawLine
++        mode.toDisplayFeatures && mode.toDisplayFeatures.call(this, state, geojson, display);
++    };
++
++    _mode.onStop = function (state) {
++        this.deleteFeature(IDS.VERTICAL_GUIDE, { silent: true });
++        this.deleteFeature(IDS.HORIZONTAL_GUIDE, { silent: true });
++        this.deleteFeature(NEARPOINT, { silent: true });        
++        // remove moveemd callback
++        this.map.off("moveend", state.moveendCallback);
++        (state.feature.type === "Polygon" || state.feature.type === "MultiPolygon") && this.map.off("draw.snap.options_changed", state.optionsChangedCallBAck);
++        // This relies on the the state of SnapLineMode being similar to DrawLine
++        mode.onStop && mode.onStop.call(this, state);
++    };
++    return _mode
++}
++
++export default inheritSnap
+\ No newline at end of file
+diff --git a/node_modules/mapbox-gl-draw-snap-mode/src/modes/snap_line.js b/node_modules/mapbox-gl-draw-snap-mode/src/modes/snap_line.js
+index 8d3833a..0f86eee 100644
+--- a/node_modules/mapbox-gl-draw-snap-mode/src/modes/snap_line.js
++++ b/node_modules/mapbox-gl-draw-snap-mode/src/modes/snap_line.js
+@@ -17,20 +17,57 @@ import {
+ const SnapLineMode = { ...DrawLine };
+ 
+ SnapLineMode.onSetup = function (options) {
+-  const line = this.newFeature({
+-    type: geojsonTypes.FEATURE,
+-    properties: {},
+-    geometry: {
+-      type: geojsonTypes.LINE_STRING,
+-      coordinates: [[]],
+-    },
+-  });
++  options = options || {};
++  const featureId = options.featureId;
++
++  let line, currentVertexPosition = 0;
++  let direction = 'forward';
++  if (featureId) {
++    line = this.getFeature(featureId);
++    if (!line) {
++      throw new Error('Could not find a feature with the provided featureId');
++    }
++    let from = options.from;
++    if (from && from.type === 'Feature' && from.geometry && from.geometry.type === 'Point') {
++      from = from.geometry;
++    }
++    if (from && from.type === 'Point' && from.coordinates && from.coordinates.length === 2) {
++      from = from.coordinates;
++    }
++    if (!from || !Array.isArray(from)) {
++      throw new Error('Please use the `from` property to indicate which point to continue the line from');
++    }
++    const lastCoord = line.coordinates.length - 1;
++    if (line.coordinates[lastCoord][0] === from[0] && line.coordinates[lastCoord][1] === from[1]) {
++      currentVertexPosition = lastCoord + 1;
++      // add one new coordinate to continue from
++      line.addCoordinate(currentVertexPosition, ...line.coordinates[lastCoord]);
++    } else if (line.coordinates[0][0] === from[0] && line.coordinates[0][1] === from[1]) {
++      direction = 'backwards';
++      currentVertexPosition = 0;
++      // add one new coordinate to continue from
++      line.addCoordinate(currentVertexPosition, ...line.coordinates[0]);
++    } else {
++      throw new Error('`from` should match the point at either the start or the end of the provided LineString');
++    }
++  }else {
++    line = this.newFeature({
++      type: geojsonTypes.FEATURE,
++      properties: {},
++      geometry: {
++        type: geojsonTypes.LINE_STRING,
++        coordinates: [[]],
++      },
++    });
++  }
++  
+ 
+   const verticalGuide = this.newFeature(getGuideFeature(IDS.VERTICAL_GUIDE));
+   const horizontalGuide = this.newFeature(
+     getGuideFeature(IDS.HORIZONTAL_GUIDE)
+   );
+ 
++
+   this.addFeature(line);
+   this.addFeature(verticalGuide);
+   this.addFeature(horizontalGuide);
+@@ -44,15 +81,14 @@ SnapLineMode.onSetup = function (options) {
+   const state = {
+     map: this.map,
+     line,
+-    currentVertexPosition: 0,
++    currentVertexPosition,
+     vertices,
+     snapList,
+     selectedFeatures,
+     verticalGuide,
+     horizontalGuide,
+-    direction: "forward", // expected by DrawLineString
++    direction, // expected by DrawLineString
+   };
+-
+   state.options = this._ctx.options;
+ 
+   const moveendCallback = () => {
+@@ -60,12 +96,14 @@ SnapLineMode.onSetup = function (options) {
+     state.vertices = vertices;
+     state.snapList = snapList;
+   };
++
+   // for removing listener later on close
+   state["moveendCallback"] = moveendCallback;
+ 
+   const optionsChangedCallBAck = (options) => {
+     state.options = options;
+   };
++ 
+   // for removing listener later on close
+   state["optionsChangedCallBAck"] = optionsChangedCallBAck;
+ 
+@@ -103,6 +141,7 @@ SnapLineMode.onClick = function (state) {
+   state.currentVertexPosition++;
+ 
+   state.line.updateCoordinate(state.currentVertexPosition, lng, lat);
++
+ };
+ 
+ SnapLineMode.onMouseMove = function (state, e) {
+diff --git a/node_modules/mapbox-gl-draw-snap-mode/src/utils/index.js b/node_modules/mapbox-gl-draw-snap-mode/src/utils/index.js
+index 56113bb..05f6aa9 100644
+--- a/node_modules/mapbox-gl-draw-snap-mode/src/utils/index.js
++++ b/node_modules/mapbox-gl-draw-snap-mode/src/utils/index.js
+@@ -45,6 +45,7 @@ export const addPointTovertices = (
+ export const createSnapList = (map, draw, currentFeature) => {
+   // Get all drawn features
+   const features = draw.getAll().features;
++
+   const snapList = [];
+ 
+   // Get current bbox as polygon
+@@ -59,7 +60,6 @@ export const createSnapList = (map, draw, currentFeature) => {
+ 
+     return bboxPolygon([cLL, cUR].flat());
+   })();
+-
+   const vertices = [];
+ 
+   // Keeps vertices for drwing guides
+@@ -96,16 +96,15 @@ export const createSnapList = (map, draw, currentFeature) => {
+ 
+     // If this is re-running because a user is moving the map, the features might include
+     // vertices or the last leg of a polygon
++
+     if (
+       feature.id === IDS.HORIZONTAL_GUIDE ||
+       feature.id === IDS.VERTICAL_GUIDE
+     )
+       return;
+-
+-    addVerticesTovertices(feature.geometry.coordinates);
+-
++    addVerticesTovertices(feature.geometry.coordinates, true);
+     // If feature is currently on viewport add to snap list
+-    if (!booleanDisjoint(bboxAsPolygon, feature)) {
++    if (feature.geometry.coordinates.length > 0 && !booleanDisjoint(bboxAsPolygon, feature)) {
+       snapList.push(feature);
+     }
+   });
+@@ -113,7 +112,7 @@ export const createSnapList = (map, draw, currentFeature) => {
+   return [snapList, vertices];
+ };
+ 
+-const getNearbyvertices = (vertices, coords) => {
++const getNearbyvertices = (vertices, coords, offset = 0.001) => {
+   const verticals = [];
+   const horizontals = [];
+ 
+@@ -123,11 +122,11 @@ const getNearbyvertices = (vertices, coords) => {
+   });
+ 
+   const nearbyVerticalGuide = verticals.find(
+-    (px) => Math.abs(px - coords.lng) < 0.009
++    (px) => Math.abs(px - coords.lng) < offset
+   );
+ 
+   const nearbyHorizontalGuide = horizontals.find(
+-    (py) => Math.abs(py - coords.lat) < 0.009
++    (py) => Math.abs(py - coords.lat) < offset
+   );
+ 
+   return {
+@@ -300,7 +299,7 @@ export const snap = (state, e) => {
+     const isMarker = closestLayer.isMarker;
+     const snapVertexPriorityDistance = state.options.snapOptions ? state.options.snapOptions.snapVertexPriorityDistance : undefined;
+ 
+-    if (!isMarker) {
++    if (!isMarker && closestLayer.segment) {
+       snapLatLng = checkPrioritiySnapping(
+         closestLayer,
+         state.options.snapOptions,
+@@ -318,7 +317,11 @@ export const snap = (state, e) => {
+ 
+   let verticalPx, horizontalPx;
+   if (state.options.guides) {
+-    const nearestGuidline = getNearbyvertices(state.vertices, e.lngLat);
++    let offset
++    if (state.options.guidesOptions) {
++      offset = state.options.guidesOptions.offset
++    }
++    const nearestGuidline = getNearbyvertices(state.vertices, e.lngLat, offset);
+ 
+     verticalPx = nearestGuidline.verticalPx;
+     horizontalPx = nearestGuidline.horizontalPx;

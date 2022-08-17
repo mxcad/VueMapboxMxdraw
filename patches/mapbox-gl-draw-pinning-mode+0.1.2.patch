@@ -1,0 +1,120 @@
+diff --git a/node_modules/mapbox-gl-draw-pinning-mode/src/index.js b/node_modules/mapbox-gl-draw-pinning-mode/src/index.js
+index 947c194..87f51dc 100644
+--- a/node_modules/mapbox-gl-draw-pinning-mode/src/index.js
++++ b/node_modules/mapbox-gl-draw-pinning-mode/src/index.js
+@@ -28,7 +28,37 @@ const pinMode = {
+   originalClickAnywhere,
+   ...restOriginalMethods,
+ };
+-
++pinMode.offset = [
++  0.001,
++  0.0009,
++  0.0007,
++  0.0005,
++
++  0.0003,
++  0.0001,
++  0.0001,
++  0.00009,
++
++  0.00008,
++  0.00007,
++  0.00006,
++  0.00005,
++
++  0.000055,
++  0.000054,
++  0.000053,
++  0.000052,
++
++  0.0000051,
++  0.0000050,
++  0.000004,
++  0.000003,
++
++  0.000002,
++  0.0000015,
++  0.0000014,
++  0.0000013,
++]
+ pinMode.onSetup = function () {
+   const selectedFeatures = this.getSelected();
+   this.clearSelectedFeatures();
+@@ -58,27 +88,36 @@ pinMode.onSetup = function () {
+     const vertices = [];
+     const features = state.draw.getAll();
+     features.features = features.features.filter((feature) => {
++    
++      if(feature.geometry.type !== "Polygon") {
++        return false
++      }
+       return coordAll(feature).some((coord, idx) =>
+-        booleanPointInPolygon(coord, BBoxPolygon)
++         booleanPointInPolygon(coord, BBoxPolygon)
+       );
+     });
+-
+     const _this = this;
++    const zoom = Math.floor(this.map.getZoom())
++    const offset = pinMode.offset[zoom] || 0.0001
+     features.features.forEach((feature) => {
++      
+       const featureVertices = coordAll(feature);
++      
++  
+       featureVertices.forEach(
+         ((featureVertex, vIdx) => {
++         
+           const alreadyDrawnIdx = vertices.findIndex((v) => {
+             const c = v.vertex.coordinates;
+-            return c[0] === featureVertex[0] && c[1] === featureVertex[1];
++            return Math.abs(c[0] - featureVertex[0]) <= offset && Math.abs(c[1] - featureVertex[1]) <= offset;
+           });
+-
+           if (alreadyDrawnIdx !== -1) {
+             vertices[alreadyDrawnIdx].vertex.properties.featureIds.push([
+               feature.id,
+               vIdx,
+             ]);
+           } else {
++           
+             vertices.push({
+               vertex: this.newFeature({
+                 type: geojsonTypes.FEATURE,
+@@ -133,21 +172,29 @@ pinMode.onMouseDown = function (state, e) {
+ 
+ pinMode.update = function (state, e) {
+   if (!state.selectedPointID) return;
++
+   const movingPoint = this.getSelected()[0];
++  
+   let newFeatures = []
+-  movingPoint.properties.featureIds.forEach(([id, vIdx]) => {
+-    const f = state.draw.get(id);
+-    f.geometry.coordinates[0][vIdx] = movingPoint.coordinates;
+-    newFeatures.push(f)
+-    state.draw.add(f);
+-  });
++  
++  if(movingPoint.properties.featureIds) {
++    movingPoint.properties.featureIds.forEach(([id, vIdx]) => {
++      const f = state.draw.get(id);
++      f.geometry.coordinates[0][vIdx] = movingPoint.coordinates;
++      newFeatures.push(f)
++      state.draw.add(f);
++    });
++  }
++
+   this.fireUpdate(newFeatures)
+ };
+ 
+ pinMode.onMouseUp = function (state, e) {
+   state.selectedPointID = null;
+   this.update(state, e);
++
+   this.originalOnMouseUp.call(this, state, e);
++
+ };
+ 
+ pinMode.onDrag = function (state, e) {
