@@ -7,10 +7,11 @@
 //通过使用本软件、其文档或相关材料
 ///////////////////////////////////////////////////////////////////////////////
 
-import { interpolateArray, interpolateObject, piecewise } from "d3-interpolate"
+import { interpolateArray, interpolateObject, piecewise, interpolate as _interpolate } from "d3-interpolate"
 import { Clock } from "three"
 import * as ease from "d3-ease"
 import { getScaleFunctionByScaleType } from "@deck.gl/aggregation-layers/utils/scale-utils"
+
 
 
 // 动画队列
@@ -35,7 +36,7 @@ export function removeAnimation(key?: string) {
 // 二分法计算最近的数组下标
 function binarySearch(arr: number[], num: number) {
     let left = 0;
-    let right = arr.length;
+    let right = arr.length -1;
     while (left <= right) {
         var center = Math.floor((left + right) / 2);
         if (num < arr[center]) {
@@ -54,24 +55,38 @@ export function interpolate<T extends Object>(inputs: number[], outputs: T[], op
         options.ease = ease.easeLinear
     }
     const arr: any[] = []
+   
     outputs.forEach((output: T, index) => {
         let outputEnd = outputs[index + 1]
         if (!outputEnd) {
             return
         }
-        arr[index] = interpolateObject(output, outputEnd)
+        if(Object.prototype.toString.call(outputEnd) === '[object Object]'){
+            arr[index] = interpolateObject(output, outputEnd)
+        }else {
+            arr[index] = _interpolate(output, outputEnd)
+        }
+        
+       
     })
     return function (t: number) {
         if (options && options.ease) {
             const _t = options.ease(t)
             // 找到当前_t在在哪一个区间中
             let index = binarySearch(inputs, _t)
+           
             // 已经经过的区间范围
             let intervalRangeOffset = index === 0 ? 0 : inputs[index]
             // 区间比例倍数(当前区间在扩展到整个插值区域需要扩展的倍数)
             const intervalMultipleProportion = 1 / (inputs[index + 1] -  inputs[index]);
+            
             // 找到对应区间的插值器，将_t值按照该区间在整个插值去的比例去缩放
-            return arr[index]((_t - intervalRangeOffset) * intervalMultipleProportion)
+            if(arr[index]) {
+                
+                return arr[index]((_t - intervalRangeOffset) * intervalMultipleProportion)
+            }
+          
+            
         }
     }
 }

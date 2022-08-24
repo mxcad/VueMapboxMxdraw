@@ -162,6 +162,10 @@ export default defineComponent({
               title: "路径流动图层",
               cmd: "Mx_Deck_Flow_Path_Layer",
             },
+            {
+              title: "复合图层",
+              cmd: "Mx_Deck_CompositeLayer"
+            }
           ],
         },
         {
@@ -193,6 +197,10 @@ export default defineComponent({
               title: "网格热力图",
               cmd: "Mx_L7_Grid_Diagram",
             },
+            {
+              title: "气泡动画",
+              cmd: "Mx_L7_Bubble_Animation"
+            }
           ],
         },
         {
@@ -286,6 +294,14 @@ export default defineComponent({
               title: "计算最短路径",
               cmd: "computingTheShortestPath",
             },
+            {
+              title: "等值线分析",
+              cmd: "isolineAnalyzing"
+            },
+            {
+              title: "缓冲区计算",
+              cmd: "bufferCalculation"
+            }
           ],
         },
         {

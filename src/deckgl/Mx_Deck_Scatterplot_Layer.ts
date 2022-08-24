@@ -84,7 +84,7 @@ export function Mx_Deck_Scatterplot_Layer() {
         myDeckLayer.setProps(props)
     })
     map.once('remove', () => {
-        gui.domElement.remove()
+        gui.destroy()
     })
 
 }

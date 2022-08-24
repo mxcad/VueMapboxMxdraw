@@ -169,7 +169,7 @@ export class MyMarker extends mapboxgl.Marker {
         if(!_this._defaultMarker)return _this._offset;
         const t=_this._map.transform,
         e=_this._offset.mult(_this._scale);
-        return "map"===_this._rotationAlignment && e._rotate(t.angle), "map"===_this._pitchAlignment && (e.y*=Math.cos(t._pitch)), e
+        return "map" === _this._rotationAlignment && e._rotate(t.angle), "map"===_this._pitchAlignment && (e.x *= Math.cos(t._pitch)), e
     }
     // 在源码增加位置偏移量_transformedOffset
     _evaluateOpacity() {
@@ -177,7 +177,7 @@ export class MyMarker extends mapboxgl.Marker {
         const map = _this._map;
         if (!map) return;
 
-        const pos = _this._pos.sub(_this._transformedOffset());
+        const pos = _this._pos
 
         if (!pos || pos.x < 0 || pos.x > map.transform.width || pos.y < 0 || pos.y > map.transform.height) {
             _this._clearFadeTimer();
@@ -277,7 +277,7 @@ export class MyMarker extends mapboxgl.Marker {
         if (map.transform.renderWorldCopies) {
             _this._lngLat = smartWrap(_this._lngLat, _this._pos, map.transform);
         }
-        _this._pos = map.project(_this._lngLat).add(_this._transformedOffset());
+        _this._pos = map.project(_this._lngLat).sub(_this._transformedOffset());
         // because rounding the coordinates at every `move` event causes stuttered zooming
         // we only round them when _update is called with `moveend` or when its called with
         // no arguments (when the Marker is initialized or Marker#setLngLat is invoked).

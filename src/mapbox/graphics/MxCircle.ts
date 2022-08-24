@@ -149,7 +149,7 @@ export function MxCircleTest() {
     
 
     map.on('remove', ()=> {
-        gui.domElement.remove()
+        gui.destroy()
         MxCircle.removeAllGeoJson()
     })
 }

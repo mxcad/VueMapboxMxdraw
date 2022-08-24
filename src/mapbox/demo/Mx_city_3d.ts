@@ -137,7 +137,7 @@ export async function Mx_city_3d() {
 
     const gui = new GUI()
     map.once('remove', () => {
-        gui.domElement.remove()
+        gui.destroy()
         removeAnimation()
     })
 }

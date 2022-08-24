@@ -88,7 +88,7 @@ export function addMapContorl() {
     gui.add(guiParims, 'showHideFullScreenControl').name('全屏')
     gui.add(guiParims, 'showAttributionControl').name('属性')
     map.once('remove',()=> {
-        gui.domElement.remove()
+        gui.destroy()
     })
 }
 

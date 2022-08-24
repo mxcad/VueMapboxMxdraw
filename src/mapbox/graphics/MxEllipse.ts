@@ -118,7 +118,7 @@ export function MxEllipseTest() {
         
     
         map.on('remove', ()=> {
-            gui.domElement.remove()
+            gui.destroy()
             MxEllipse.removeAllGeoJson()
         })
     })

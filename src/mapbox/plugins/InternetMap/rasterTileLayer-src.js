@@ -2036,7 +2036,7 @@
 	            subdomains: null,
 
 	            minZoom: 0,
-	            maxZoom: 18,
+	            maxZoom: 24,
 	            tileType: 'xyz' //bd09,xyz
 	        };
 	        setOptions(this, options); //合并属性
@@ -2092,7 +2092,6 @@
 	        //获取顶点位置变量
 	        this.a_Pos = gl.getAttribLocation(this.program, "a_pos");
 	        this.a_TextCoord = gl.getAttribLocation(this.program, 'a_TextCoord');
-
 	        this.isLayerShow = true;
 	        map.on('move', () => {
 	            if (this.isLayerShow) this.update(gl, map);
@@ -2347,7 +2346,7 @@
 	            'u_viewport_center_projection': [0, 0, 0, 0]
 	        };
 
-	        if (currentZoomLevel > 12) {
+	        if (currentZoomLevel > 0) {
 	            const { pixelsPerDegree, pixelsPerDegree2 } = getDistanceScales({
 	                longitude: center.lng,
 	                latitude: center.lat,
@@ -2388,7 +2387,7 @@
 	        gl.uniform2fv(gl.getUniformLocation(this.program, "u_viewport_center"), drawParams['u_viewport_center']);
 	        gl.uniform4fv(gl.getUniformLocation(this.program, "u_viewport_center_projection"), drawParams['u_viewport_center_projection']);
 	    }
-
+		
 	    //当map移除当前图层时调用
 	    onRemove(map, gl) {
 	        this.isLayerShow = false;
@@ -2426,7 +2425,7 @@
 	        GaoDe: {
 	            Normal: {
 	                Map: 'http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}',
-	                minzoom: 3,
+	                minzoom: 0,
 	                maxzoom: 18
 	            },
 	            Normal_NoTag: {

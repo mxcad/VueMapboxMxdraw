@@ -76,6 +76,10 @@ import { setHeight } from "@/mapbox/pointTag/setHeight"
 import { pointSymbolAggregation } from "@/mapbox/pointTag/pointSymbolAggregation"
 import { dotSymbolsAggregateCustomIcons } from "@/mapbox/pointTag/dotSymbolsAggregateCustomIcons"
 import { pointMarkerAggregation } from "@/mapbox/pointTag/pointMarkerAggregation"
+import { isolineAnalyzing } from "@/mapbox/calculate/isolineAnalyzing"
+import { bufferCalculation } from "@/mapbox/calculate/bufferCalculation"
+import Mx_L7_Bubble_Animation from "@/L7/Mx_L7_Bubble_Animation"
+import { Mx_Deck_CompositeLayer } from "@/deckgl/Mx_Deck_CompositeLayer"
 
 
 
@@ -111,6 +115,8 @@ export function cmdInit() {
     MxFun.addCommand('Mx_Deck_Grid_Layer', Mx_Deck_Grid_Layer)
     MxFun.addCommand('Mx_Deck_Model_Layer', Mx_Deck_Model_Layer)
     MxFun.addCommand('Mx_Deck_Flow_Path_Layer', Mx_Deck_Flow_Path_Layer)
+    MxFun.addCommand('Mx_Deck_CompositeLayer', Mx_Deck_CompositeLayer)
+    
     
     // L7
     MxFun.addCommand('Mx_L7_Beam_Path_Animation', Mx_L7_Beam_Path_Animation)
@@ -119,7 +125,9 @@ export function cmdInit() {
     MxFun.addCommand('Mx_L7_Gradient_Histogram', Mx_L7_Gradient_Histogram)
     MxFun.addCommand('Mx_L7_Contour', Mx_L7_Contour)
     MxFun.addCommand('Mx_L7_Grid_Diagram', Mx_L7_Grid_Diagram)
+    MxFun.addCommand('Mx_L7_Bubble_Animation', Mx_L7_Bubble_Animation)
 
+    
     // 第三方地图
     MxFun.addCommand('Mx_Internet_Map_bdsl', loadThirdPartyMaps.bdsl)
     MxFun.addCommand('Mx_Internet_Map_bdyx', loadThirdPartyMaps.bdyx)
@@ -144,7 +152,11 @@ export function cmdInit() {
     // 几何计算
     MxFun.addCommand('strivesForTheClosestPoint', strivesForTheClosestPoint)    
     MxFun.addCommand('computingTheShortestPath', computingTheShortestPath)    
+    MxFun.addCommand('isolineAnalyzing', isolineAnalyzing)
+    MxFun.addCommand('bufferCalculation', bufferCalculation)
 
+    
+    
     // 图层
     MxFun.addCommand('backgroundLayer', backgroundLayer)    
     MxFun.addCommand('customWatermarkBackgroundLayer', customWatermarkBackgroundLayer)    

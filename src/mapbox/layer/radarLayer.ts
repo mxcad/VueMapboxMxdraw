@@ -63,6 +63,6 @@ export function radarLayer() {
     }
     gui.add(guiParams, 'setImg').name('切换图片')
     map.once('remove',()=> {
-        gui.domElement.remove()
+        gui.destroy()
     })
 }

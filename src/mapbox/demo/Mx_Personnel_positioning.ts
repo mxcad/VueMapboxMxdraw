@@ -399,7 +399,7 @@ export default async function Mx_Personnel_positioning() {
         }
     });
     map.once('remove', () => {
-        gui.domElement.remove()
+        gui.destroy()
         clearInterval(guiParims.intervalId)
     })
 }

@@ -98,6 +98,6 @@ export function Mx_Deck_Model_Layer() {
     })
     
     map.once('remove', ()=> {
-        gui.domElement.remove()
+        gui.destroy()
     })
 }

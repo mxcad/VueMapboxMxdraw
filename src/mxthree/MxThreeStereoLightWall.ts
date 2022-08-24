@@ -219,6 +219,6 @@ export default async function () {
         mapbxodraw.deleteAll()
       });
     map.once('remove', ()=> {
-        gui.domElement.remove()
+        gui.destroy()
     })
 }

@@ -121,7 +121,7 @@ export function Mx_Deck_Arc_Layer() {
     })
     gui.add(guiParams, 'add')
     map.once('remove', () => {
-        gui.domElement.remove()
+        gui.destroy()
     })
 
 }

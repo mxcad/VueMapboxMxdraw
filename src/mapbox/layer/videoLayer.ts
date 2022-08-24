@@ -35,6 +35,6 @@ export function videoLayer() {
     gui.add(video, 'play')
     gui.add(video, 'pause')
     map.on('remove', ()=> {
-        gui.domElement.remove()
+        gui.destroy()
     })
 }

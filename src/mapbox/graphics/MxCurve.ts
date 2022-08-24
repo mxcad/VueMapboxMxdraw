@@ -94,7 +94,7 @@ export function MxCurveTest() {
     extrusionFolder.add(curve.options, 'height', 0, 500)
 
     map.on('remove', ()=> {
-        gui.domElement.remove()
+        gui.destroy()
         MxCurve.removeAllGeoJson()
     })
 }

@@ -18,7 +18,8 @@ import { init as l7Init, l7Scene } from "@/L7";
 import { Map } from "./Map";
 import * as turf from "@turf/turf";
 import * as THREE from "three";
-import { MxFun } from "mxdraw";
+import { loadCoreCode, MxFun } from "mxdraw";
+import { Mx_CADGISDemo } from "./demo/Mx_cadandgis";
 
 //export let map: Map
 let map: Map;
@@ -52,7 +53,7 @@ export namespace MxMapBox {
 
         let ptCADOrigin = param.cadOrigin ? param.cadOrigin : ptMapOrigin;
 
-        let zoom =  param.zoom ? param.zoom : 15;
+        let zoom = param.zoom ? param.zoom : 15;
 
         let mapParam = param.mapparam;
         if (!mapParam) {
@@ -175,39 +176,66 @@ export namespace MxMapBox {
                 accessToken: accessToken,
             };
         }
-
+   
         map = new Map(mapParam);
 
         // 监听地图样式加载
         map.on("style.load", async () => {
             // 加载用于图层分隔的空图层 (层级优先: 点 > 线 > 面 )
             map.addGroupLayer();
-           
 
-            let cadFile:string = param.cadFile;
-            if(!cadFile){
-                cadFile = "empty.dwg"
+            let cadFile: string = param.cadFile;
+            if (!cadFile) {
+                cadFile = "empty.dwg";
             }
 
-            let kilometers = param.kilometers ? param.kilometers: 1;
+            let kilometers = param.kilometers ? param.kilometers : 1;
 
             // 初始化图纸显示
-            mxMap = await mxDrawInit(map, ptCADOrigin,kilometers, cadFile);
+            mxMap = await mxDrawInit(map, ptCADOrigin, kilometers, cadFile);
 
             if (param.call) {
                 param.call(map, mxMap);
             }
         });
- 
-        
     }
+}
+
+function getQueryString(name: string): string {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+    var r = window.location.search.substr(1).match(reg);
+    if (r != null) return decodeURIComponent(r[2]);
+    return "";
 }
 
 // 初始化 mapbox
 export function init(cmd?: string) {
+    let autoInit = true;
+    if (!cmd) {
+
+        // 可改通过地址参数，启动相应demo.
+        // http://localhost:8088/?cmd=Mx_Personnel_positioning
+        // http://localhost:8088/?cmd=Mx_CADGISDemo&autoinit=n
+
+        cmd = getQueryString("cmd");
+        let autoInitSet = getQueryString("autoinit");
+        if (autoInitSet && autoInitSet.length > 0) {
+            autoInit = autoInitSet == "y";
+        }
+        if (!autoInit) {
+            loadCoreCode().then(() => {
+                
+                MxFun.addCommand('Mx_CADGISDemo', Mx_CADGISDemo)
+                MxFun.sendStringToExecute(cmd as string);
+            });
+
+            return;
+        }
+    }
+
     let cadFile = "/demo/buf/mapcad.dwg";
     MxMapBox.init({
-        cadFile:cadFile,
+        cadFile: cadFile,
         call: async () => {
             // 拿到图纸的一些数据(数据由后端获取图纸数据并返回对应的json数据)
             const data = await fetch("./demo/mapcad.dwg.json");
@@ -242,7 +270,7 @@ export function init(cmd?: string) {
                         turf.rhumbDistance([center.lng, center.lat], [lng, center.lat], {
                             units: "kilometers",
                         }) * 2;
-                    mxMap = await mxDrawInit(map, [center.lng, center.lat], distance,cadFile);
+                    mxMap = await mxDrawInit(map, [center.lng, center.lat], distance, cadFile);
                 });
             // 拖动可改变图纸中心点位置，并根据另一个标记点位置的X坐标轴确定图纸大小
             const centerMarker = new mapboxgl.Marker()
@@ -257,7 +285,7 @@ export function init(cmd?: string) {
                         turf.rhumbDistance([center.lng, center.lat], [lng, center.lat], {
                             units: "kilometers",
                         }) * 2;
-                    mxMap = await mxDrawInit(map, [center.lng, center.lat], distance,cadFile);
+                    mxMap = await mxDrawInit(map, [center.lng, center.lat], distance, cadFile);
                 });
 
             let points: number[][] = [];
@@ -268,8 +296,8 @@ export function init(cmd?: string) {
                 points.push([lng, lat]);
                 // console.log(JSON.stringify(points))
             });
-           
-            if(cmd){
+
+            if (cmd) {
                 console.log(cmd);
                 MxFun.sendStringToExecute(cmd);
             }

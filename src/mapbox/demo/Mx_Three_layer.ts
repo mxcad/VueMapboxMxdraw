@@ -87,6 +87,6 @@ export default function() {
 	gui.add( layers, 'enable all' );
 	gui.add( layers, 'disable all' );
 	map.once('remove', ()=> {
-		gui.domElement.remove()
+		gui.destroy()
 	})
 }
