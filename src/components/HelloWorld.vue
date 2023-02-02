@@ -1,13 +1,13 @@
 <template>
-  <el-header>Header</el-header>
-<el-container>
-  <el-aside width="200px">
-    <my-menu></my-menu>
-  </el-aside>
-  <el-main>
-     <div id="map"></div>
-  </el-main>
-</el-container>
+    <el-header>Header</el-header>
+    <el-container>
+      <el-aside width="200px">
+        <my-menu></my-menu>
+      </el-aside>
+      <el-main >
+       <div id="map"></div>
+      </el-main>
+    </el-container>
 </template>
 
 <script lang="ts">
@@ -35,6 +35,7 @@ export default defineComponent({
 });
 </script>
 <style>
+
 #map {
   width: 100%;
   height: 100%;
@@ -45,4 +46,5 @@ export default defineComponent({
 .el-container {
   height: calc(100% - 60px);
 }
+
 </style>

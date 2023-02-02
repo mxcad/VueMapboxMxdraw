@@ -82,11 +82,11 @@ class Sector extends Feature {
             let bearing2 = turf.bearing(start, pos);
             let radius = turf.distance(start, end);
 
-            const sector = turf.sector(start, radius, bearing1, bearing2).geometry.coordinates[0].slice(0, -1);
+            const sector = (turf.sector(start, radius, bearing1, bearing2) as any).geometry.coordinates[0].slice(0, -1);
             this.coordinates = [sector];
         }
 
-        if (this.coordinates[ringId] === undefined) {
+        if (this.coordinates[ringId] === void 0) {
             this.coordinates[ringId] = [];
         }
     }
@@ -151,7 +151,7 @@ export const DrawSector = {
         doubleClickZoom.enable(this);
         this.activateUIButton();
 
-        if (this.getFeature(sector.id) === undefined) return;
+        if (this.getFeature(sector.id) === void 0) return;
         sector.removeCoordinate(`0.${currentVertexPosition}`);
         if (sector.isValid()) {
             this.map.fire(Constants.events.CREATE, {

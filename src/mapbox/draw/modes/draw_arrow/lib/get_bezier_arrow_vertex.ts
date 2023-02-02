@@ -29,7 +29,7 @@ export function getBezierVertex(ctx:any, points_x:any, points_y:any) {
 export function get_bezier_arrow_vertex(ctx:any, p1: { x: number; y: number; }, p2: {x: number, y:number}, p3?: { x: any; y: any; }) {
     let coord: any[] = [];
     let head = null;
-    if (p3 === undefined) {
+    if (p3 === void 0) {
         var p1_geo = ctx.map.unproject([p1.x, p1.y]);
         coord[0] = [p1_geo.lng, p1_geo.lat];
         head = getHeadVertex(ctx, p1, p2);

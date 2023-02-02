@@ -107,7 +107,7 @@ export function isolineAnalyzing() {
 
     // 记录随机点的经纬度和参考值(如高度/温度值以value表示)
     let values: number[] = [], lngs: number[] = [], lats: number[] = [];
-    points.features.forEach(feature => {
+    points.features.forEach((feature:any) => {
         // 记录参考值 zProperty参数表示参考值的属性名
         values.push(feature.properties[zProperty]);
         lngs.push(feature.geometry.coordinates[0]);
@@ -201,7 +201,7 @@ export function isolineAnalyzing() {
     }
 
     map.addSource('isolineAnalyzing_source', {
-        data: contour,
+        data: contour as any,
         type: "geojson"
     })
 

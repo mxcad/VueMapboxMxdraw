@@ -29,9 +29,6 @@ export interface MxEllipseDefaultOptions extends GraphicsDefaultOptions {
 
 // 椭圆
 export class MxEllipse extends Graphics {
-    static FeatureCollectionExtrusion = turf.featureCollection([])
-    static FeatureCollectionFill = turf.featureCollection([])
-    static FeatureCollectionLine = turf.featureCollection([])
     constructor(options: MxEllipseOptions) {
         if(!options.center) options.center = [0, 0]
         if(!options.xSemiAxis) options.xSemiAxis = 0.1
@@ -45,7 +42,6 @@ export class MxEllipse extends Graphics {
     }
 
     getCoordinates(options: MxEllipseDefaultOptions) {
-        if(!this._map) return
         let { center, xSemiAxis, ySemiAxis, type, lineWidth, isExtrusion } = options
         // 类型判断 
         const isFill = type === 'fill', isLine = type === 'line'
@@ -55,12 +51,12 @@ export class MxEllipse extends Graphics {
             steps: 360
         })
         // 1.1 保存初始坐标
-        let _coordinates:turf.helpers.Position[] | turf.helpers.Position[][] = this.geojson.geometry.coordinates
+        let _coordinates = (this.geojson.geometry as any).coordinates
         
         // 2.判断填充 ？ 生成对应geojson
-        if (isLine) _coordinates = (turf.polygonToLine(this.geojson) as turf.helpers.Feature<turf.helpers.LineString>).geometry.coordinates
+        if (isLine) _coordinates = (turf.polygonToLine(this.geojson) as any).geometry.coordinates
         // 3.判断 线 && 拉伸 
-        if (isLine && isExtrusion) (_coordinates = this._map.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
+        if (isLine && isExtrusion) (_coordinates = this.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
 
         return _coordinates
     }

@@ -51,7 +51,7 @@ export function strivesForTheClosestPoint() {
         
         const lnglat = e.target.getLngLat().toArray()
         // 计算所有线段中的最近点
-        const { geometry }  = turf.nearestPointOnLine(lineStrings as any, turf.point(lnglat), {units: 'miles'})
+        const { geometry }  = turf.nearestPointOnLine(lineStrings as any, turf.point(lnglat), {units: 'miles'}) as any
         geometry.coordinates
         pt1.setLngLat(geometry.coordinates as [number, number])
         const pt = turf.point(pt1.getLngLat().toArray())
@@ -70,7 +70,7 @@ export function strivesForTheClosestPoint() {
         lines.setData(lineStrings)
     })
     // 绘制路径
-    const { geometry, properties }  = turf.nearestPointOnLine(lineStrings as any, turf.point(pointCoordinates[0]), {units: 'miles'})
+    const { geometry, properties }  = turf.nearestPointOnLine(lineStrings as any, turf.point(pointCoordinates[0]), {units: 'miles'}) as any
     console.log(properties)
     pt1.setLngLat(geometry.coordinates as [number, number])
 

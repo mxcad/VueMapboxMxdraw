@@ -90,7 +90,7 @@ export const DrawTriangle  = {
         this.updateUIClasses({ mouse: Constants.cursors.NONE });
         doubleClickZoom.enable(this);
         this.activateUIButton();
-        if (this.getFeature(triangle.id) === undefined) return;
+        if (this.getFeature(triangle.id) === void 0) return;
         triangle.removeCoordinate(`0.${currentVertexPosition}`);
     
         if (triangle.isValid()) {

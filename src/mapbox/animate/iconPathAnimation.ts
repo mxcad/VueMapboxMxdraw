@@ -39,7 +39,7 @@ export function iconPathAnimation() {
         return line
     })
     // 起始点数据
-    const points = turf.featureCollection(_points)
+    const points = turf.featureCollection(_points) as any
     // 添加线段图层
     map.addLayer({
         id: "iconPathAnimation",
@@ -63,7 +63,7 @@ export function iconPathAnimation() {
             type: "symbol",
             source: {
                 type: "geojson",
-                data: points as any
+                data: points
             },
             layout: {
                 'icon-image': 'carIcon',
@@ -86,7 +86,7 @@ export function iconPathAnimation() {
                 // 是否反转动画了,反转动画需要把车的方向改了
                 let isReverse = lastValue > latest;
                 lastValue = latest;
-                points.features.forEach((point, index)=> {
+                points.features.forEach((point:any, index:number)=> {
                     const prop = initData.features[index].properties;
                     // 计算线段的动态点坐标
                     const path = interpolatePointsByRatio(prop.path.geometry.coordinates, latest)

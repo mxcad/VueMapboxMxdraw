@@ -25,7 +25,7 @@ export function customWatermarkBackgroundLayer() {
                 "background-pattern": "watermark",
                 'background-opacity': 0.3
             },
-        },spelLayer ? spelLayer.id : undefined);
+        },spelLayer ? spelLayer.id : void 0);
     })
    
 }

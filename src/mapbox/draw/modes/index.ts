@@ -43,7 +43,7 @@ Object.assign(NameLineSnapPatchMode, DrawNamedLineMode, SnapLineMode, {
         let state = SnapLineMode.onSetup.call(this, opts)
         const isNameRequired = DrawNamedLineMode.isNameRequired === true;
         const featureName = opts.featureName;
-        const showNamePrompt = (opts.showNamePrompt !== undefined ? opts.showNamePrompt === true : (this as any).showNamePrompt === true) || (isNameRequired && !featureName);
+        const showNamePrompt = (opts.showNamePrompt !== void 0 ? opts.showNamePrompt === true : (this as any).showNamePrompt === true) || (isNameRequired && !featureName);
         const extendedState = Object.assign(state, {
             isNameRequired: isNameRequired,
             name: featureName

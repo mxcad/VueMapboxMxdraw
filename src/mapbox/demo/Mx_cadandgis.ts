@@ -15,16 +15,20 @@ import { getNoStyle } from "../style";
 export async function Mx_CADGISDemo() {
   
   MxMapBox.init({
-    mapOrigin:[114.0581565,22.543404],
-
-    // CAD图纸中心，对应地图上的位置。
     // 小=左，大=上
-    cadOrigin:[114.0581565,22.547404],
+    //  图纸中的中心在地址上的位置，单位经纬度
+    mapOrigin:[114.06825863001939,22.54283198132819],
+
+     // 小=右，大=下
+    //  CAD图纸中的中心中，CAD图纸单位
+    cadOrigin:[116275.977014,19273.279085],
+
+    // 一个CAD绘图单位，是现实中多少米.
+    meterInCADUnits: 1.0,
 
     cadFile:"/demo/buf/road.dwg",
+    
     zoom:16,
-    // CAD的默认显示区域对的地图上的多少米
-    kilometers:4.87,
     mapparam: {
         // Mapbox GL JS 进行地图渲染的 HTML 元素，或该元素的字符串 id 。该指定元素不能有子元素。
         container: "map",
@@ -35,7 +39,7 @@ export async function Mx_CADGISDemo() {
         // 地图最大缩放级别（0-24）。
         maxZoom: 24,
         // 地图初始化时的地理中心点。如果构造函数的参数中没有设置 center ，Mapbox GL JS 会在地图样式中进行查找。如果样式中也没定义的话，那么它将默认为 [0, 0] 注意: 为了与 GeoJSON 保持一致，Mapbox GL 采用经度，纬度的顺序 (而不是纬度，经度)。
-        center: [114.0581565,22.543404],
+        center: [114.06825863001939,22.54283198132819],
 
         // 地图初始化时的层级。如果构造函数的参数中没有设置 zoom Mapbox GL JS 会在地图样式中进行查找。如果样式中也没定义的话，那么它将默认为 0
         zoom: 16,

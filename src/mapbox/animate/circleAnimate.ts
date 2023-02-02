@@ -23,7 +23,7 @@ export function circleAnimate() {
     const circle = turf.point(center, {
         color: '#ffff00',
         opacity: 1
-    })
+    }) as any
 
     // 添加图层
     map.addLayer({

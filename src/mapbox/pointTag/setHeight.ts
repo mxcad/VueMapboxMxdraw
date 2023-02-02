@@ -31,7 +31,7 @@ export const anchorTranslate: any = {
 export const TERRAIN_OCCLUDED_OPACITY = 0.2;
 function createDOM(tagName: string, className?:string, container?: HTMLElement): any {
     const el = window.document.createElement(tagName);
-    if (className !== undefined) el.className = className;
+    if (className !== void 0) el.className = className;
     if (container) container.appendChild(el);
     return el;
 }
@@ -102,21 +102,30 @@ export function smartWrap(_lngLat: any, priorPos: Point, transform: any): LngLat
     return lngLat;
 }
 
-export type  MyMarkerOptions = mapboxgl.MarkerOptions & {height?: number; scaleMaxZoom?: number}
+export type  MyMarkerOptions = mapboxgl.MarkerOptions & {height?: number; scaleMaxZoom?: number, isAutoScale?:boolean}
 
 // 重写Marker 类
 export class MyMarker extends mapboxgl.Marker {
     _height:number | undefined;
     _scaleMaxZoom: number | undefined
+    _isAutoScale: boolean | undefined
     constructor(options?: MyMarkerOptions) {
         super(options)
         if(options?.height) this.setHeight(options?.height)
         if(options?.scaleMaxZoom) this.setScaleMaxZoom(options?.scaleMaxZoom)
+        if(options?.isAutoScale) this.setIsAutoScale(options?.isAutoScale)
     }
+
+    // 强制自定缩放
+    setIsAutoScale(zoom:boolean) {
+        this._isAutoScale = zoom
+    }
+
     // 用于限定标记的自定缩放
     setScaleMaxZoom(zoom:number) {
         this._scaleMaxZoom = zoom
     }
+    
     // 获取高度
     getHeight() {
         return this._height || 0
@@ -258,10 +267,10 @@ export class MyMarker extends mapboxgl.Marker {
         const zoom = _this._map.getZoom()
         // 缩放比
         let ratio
-        if(_this._scaleMaxZoom && zoom < _this._scaleMaxZoom) {
-            ratio = Math.pow(2, zoom - _this._scaleMaxZoom );
+        if(_this._scaleMaxZoom && zoom <= _this._scaleMaxZoom || (_this._scaleMaxZoom && _this._isAutoScale)) {
+            ratio = Math.pow(2, zoom - _this._scaleMaxZoom);
         }
-        
+
         _this._element.style.transform = `
             translate(${pos.x}px, ${pos.y}px) ${anchorTranslate[_this._anchor]}
             rotateX(${pitch}deg) rotateZ(${rotation}deg)
@@ -391,8 +400,7 @@ export function setHeight() {
     data.features[0].properties = {
         height: 500
     }
-    
-    const coord = turf.center(data).geometry.coordinates
+    const coord = (turf.center(data) as any).geometry.coordinates
     
     map.addLayer({
         'id': '3d-setHeight',

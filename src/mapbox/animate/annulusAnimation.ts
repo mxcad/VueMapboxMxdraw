@@ -30,10 +30,11 @@ export function annulusAnimation() {
         const bearing1 = random(0, 360)
         const bearing2 = random(0, 360)
         // 创建两个圆弧的数据
-        const arc1 = turf.lineArc(point,radius, bearing1, bearing2);
-        const arc2 = turf.lineArc(point,radius + width, bearing1, bearing2);
+        const arcCoordinates1 = turf.lineArc(point,radius, bearing1, bearing2).geometry?.coordinates as turf.helpers.Position[];
+        const arcCoordinates2 = turf.lineArc(point,radius + width, bearing1, bearing2).geometry?.coordinates as turf.helpers.Position[];
+
         // 最终返回一个拼接好的圆环数据
-        return turf.polygon([[...arc1.geometry.coordinates, ...arc2.geometry.coordinates.reverse(), arc1.geometry.coordinates[0]]], {
+        return turf.polygon([[...arcCoordinates1, ...arcCoordinates2.reverse(), arcCoordinates1[0]]], {
             color: `rgb(${random(0, 255)}, ${random(0, 255)}, ${random(0, 255)})`,
             outColor: `rgb(${random(0, 255)}, ${random(0, 255)}, ${random(0, 255)})`,
             radius,
@@ -49,7 +50,7 @@ export function annulusAnimation() {
         type: "fill",
         source: {
             type: "geojson",
-            data: annulusArr
+            data: annulusArr as any
         },
         paint: {
             "fill-color": ['get', 'color'],
@@ -78,10 +79,10 @@ export function annulusAnimation() {
         // 动画更新
         onUpdate(latest) {
             for(let i = 0 ; i < annulusArr.features.length; i++) {
-                const annulus = annulusArr.features[i]
+                const annulus = annulusArr.features[i] as any
                 // 根据latest 最新的时间获取圆环的颜色和角度
                 const { color, angle } =  mapProgressToValues(i)(latest)
-
+         
                 // 得到圆环数据的一些重要参数
                 annulus.properties.color = color
                 const prop = initData.features[i].properties;
@@ -89,9 +90,9 @@ export function annulusAnimation() {
                 const endAngle = (prop.endAngle + angle);
 
                 // 重新创建圆环数据
-                const arc1 = turf.lineArc(prop.center, prop.radius, startAngle , endAngle);
-                const arc2 = turf.lineArc(prop.center, prop.radius + prop.width, startAngle , endAngle);
-                annulus.geometry.coordinates = [[...arc1.geometry.coordinates, ...arc2.geometry.coordinates.reverse(), arc1.geometry.coordinates[0]]]
+                const arcCoordinates1 = turf.lineArc(prop.center, prop.radius, startAngle , endAngle).geometry?.coordinates as turf.helpers.Position[];;
+                const arcCoordinates2 = turf.lineArc(prop.center, prop.radius + prop.width, startAngle , endAngle).geometry?.coordinates as turf.helpers.Position[];;
+                annulus.geometry.coordinates = [[...arcCoordinates1, ...arcCoordinates2.reverse(), arcCoordinates1[0]]]
             }
             // 重新设置数据源
             source.setData(annulusArr)

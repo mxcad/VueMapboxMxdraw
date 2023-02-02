@@ -54,7 +54,7 @@ export interface GraphicsOptions {
 export interface GraphicsDefaultOptions {
     [x: string | symbol]: any
      // 是否一个图形使用一个图层(这样可以让线渐变等一些属性可以分开处理
-     isNewLayer: boolean
+    isNewLayer: boolean
     /** 基础参数 */
     coordinates: turf.helpers.Position[] | turf.helpers.Position[][]
     color: string | number[],
@@ -79,13 +79,21 @@ export interface GraphicsDefaultOptions {
     baseHeight: number,
     height: number,
     fillPattern: string | null | undefined
-     /** 事件配置 */ 
-     onClikc: Function
+    /** 事件配置 */ 
+    onClikc: Function
 
-     onHover: Function
-     // hover 时改变图形颜色
-     hoverColor: string | number[]
-     onHoverOut: Function
+    onHover: Function
+    // hover 时改变图形颜色
+    hoverColor: string | number[]
+    onHoverOut: Function
+}
+
+// 图形存储的事件对象类型
+interface EvnetObjType {
+    getSourceId: () => string;
+    onClikc: Function;
+    onHover: Function;
+    onHoverOut: Function;
 }
 
 // 用于生成唯一图形 ID 的计数器
@@ -97,11 +105,36 @@ export class Graphics {
     static FeatureCollectionFill = turf.featureCollection([])
     static FeatureCollectionLine = turf.featureCollection([])
 
+    // 事件相关
     static hoveredStateId: string | number | null = null
+    static eventsMap = new window.Map<number, EvnetObjType>()
+    static eventSourceIdsSet = new Set<string>()
+
+    // 绘制全部图形
+    static randerAll(graphicsArr: Graphics[], map: Map) {
+        let extrusionGraphics: Graphics | undefined = void 0, fillGraphics: Graphics | undefined = void 0, lineGraphics: Graphics| undefined = void 0
+        graphicsArr.forEach((graphics)=> {
+            const {type, isExtrusion}  = graphics.options
+            if(!extrusionGraphics && isExtrusion) extrusionGraphics = graphics
+            if(!fillGraphics && type === 'fill' && !isExtrusion) fillGraphics = graphics
+            if(!lineGraphics && type === 'line' && !isExtrusion) lineGraphics = graphics
+            graphics._createGeoJson(graphics.options)     
+        })
+        extrusionGraphics && (extrusionGraphics as Graphics).addTo(map)
+        fillGraphics && (fillGraphics as Graphics).addTo(map)
+        lineGraphics && (lineGraphics as Graphics).addTo(map)
+    }
+
     static removeAllGeoJson() {
         this.FeatureCollectionExtrusion.features = []
         this.FeatureCollectionFill.features = []
         this.FeatureCollectionLine.features = []
+        this.removeAllEvents()
+    }
+
+    static removeAllEvents() {
+        Graphics.eventsMap.clear()
+        Graphics.eventSourceIdsSet.clear()
     }
     geojson?: turf.helpers.Feature<turf.helpers.LineString, turf.helpers.Properties> | turf.helpers.Feature<turf.helpers.Polygon, turf.helpers.Properties>
     options: GraphicsDefaultOptions = {
@@ -145,11 +178,15 @@ export class Graphics {
   
     constructor(options: GraphicsOptions) {
         this.setProp(options)
+        // 绑定options代理(数据改变自动更新渲染)
+        this._bindProxyOptions(this.options)
+        this._addEvent()
     }
     /** 设置配置参数 */
     setProp(options: GraphicsOptions) {
         // 合并默认参数
         this.options = Object.assign(this.options, options)
+        
         return this
     }
 
@@ -169,9 +206,22 @@ export class Graphics {
          }
      
      }
+    /** 
+     * 线段转多边形
+     * */ 
+    polylineToPolygon(path: number[][], offset: number) {
+        if (path.length < 2) {
+            return []
+        }
+        const line = turf.lineString(path) as any
+        const offsetLine1 = turf.lineOffset(line, offset, { units: "meters" })
+        const offsetLine2 = turf.lineOffset(line, -offset, { units: "meters" })
+        const points = [...offsetLine1.geometry.coordinates, ...offsetLine2.geometry.coordinates.reverse(), offsetLine1.geometry.coordinates[0]]
+        return [points]
+    }
 
+    /** 获取坐标点 */
     getCoordinates(options: GraphicsDefaultOptions) {
-        if(!this._map) return
         let { type, lineWidth, isExtrusion, coordinates } = options
         // 类型判断 
         const isFill = type === 'fill', isLine = type === 'line'
@@ -182,7 +232,7 @@ export class Graphics {
         // 2.判断填充 ？ 生成对应geojson
         if (isFill) _coordinates =  [_coordinates] as unknown as  turf.helpers.Position[]
         // 3.判断 线 && 拉伸 
-        if (isLine && isExtrusion) (_coordinates = this._map.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
+        if (isLine && isExtrusion) (_coordinates = this.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
 
         return _coordinates
     }
@@ -193,6 +243,7 @@ export class Graphics {
         this._removeGeoJson()
         // 获取坐标点
         const coordinates = this.getCoordinates(options)
+      
         // 类型判断 
         const isFill = type === 'fill', isLine = type === 'line'
         if(isFill || isExtrusion) (this.geojson = turf.polygon(coordinates as unknown as turf.helpers.Position[][]))
@@ -203,7 +254,7 @@ export class Graphics {
         // 设置 properties
         this._setGeoJsonProperties(this.options)
         // 获取该渲染类型的分组并添加
-        const group = this._getTypeGroup()?.features
+        const group = this._getTypeGroup()?.features as any
         group?.push(this.geojson)
         
         return this.geojson
@@ -293,31 +344,70 @@ export class Graphics {
         this._map = map
         // 创建圆geojson数据
         this._createGeoJson(this.options)
-        // 绑定options代理(数据改变自动更新渲染)
-        this._bindProxyOptions(this.options)
         this.rander(map)
-        this._bindEvent(map)  
+        this._bindEvent(map)
         return this
     }
+
+    // 添加事件
+    _addEvent() {
+        const eventObj = Graphics.eventsMap.get(this.id)
+        if(!eventObj) {
+            const { onClikc, onHover, onHoverOut} = this.options
+            Graphics.eventsMap.set(this.id, {
+                getSourceId: ()=> this._getSourceOrLayerId({
+                    type: this.options.type,
+                    isExtrusion: this.options.isExtrusion
+                }),
+                onClikc,
+                onHover,
+                onHoverOut
+            })
+        }
+    }
+
     // 绑定事件
     _bindEvent(map: Map) {
         if(!map) return
-        const id = this._getSourceOrLayerId(this.options)
-        map.on("mousemove", id, (e:any)=> {
-           if(e.features.length > 0 && this.id ===  e.features[0].id) {
-                this.options.onHover(this, id, e)
-                map.setFeatureState({ source: id, id: this.id }, { hover: true });
-           }
-        });
-        map.on("mouseleave", id, (e:any)=> {
-            this.options.onHoverOut(this, id, e)
-            map.setFeatureState({ source: id, id: this.id }, { hover: false });
-        });
-
-        map.on("click", id, (e:any)=> {
-            this.options.onClikc(this, id, e)
+       
+        const sourceIds = [
+            this._getSourceOrLayerId({ isExtrusion: false, type: 'fill' }),
+            this._getSourceOrLayerId({ isExtrusion: false, type: 'line' }),
+            this._getSourceOrLayerId({ isExtrusion: true, type: 'fill' }),
+        ]
+        sourceIds.forEach(sourceId=> {
+            if(!Graphics.eventSourceIdsSet.has(sourceId)) {
+                let id: number, eventObj: EvnetObjType | undefined
+                map.on("mousemove",  sourceId, (e:any)=> {
+                    
+                    if(e.features.length > 0 ) {
+                            id = e.features[0].id
+                            eventObj = Graphics.eventsMap.get(id)
+                            if(eventObj) {
+                                eventObj.onHover(this, id, e)
+                                map.setFeatureState({ source: eventObj.getSourceId(), id }, { hover: true });
+                            }
+                    }
+                });
+                map.on("mouseleave", sourceId, (e:any)=> {
+                    if(eventObj) {
+                        eventObj.onHoverOut(this, id, e)
+                        map.setFeatureState({ source: eventObj.getSourceId(), id }, { hover: false });
+                    }
+                });
+        
+                map.on("click", sourceId, (e:any)=> {
+                    if(e.features.length > 0) {
+                        id = e.features[0].id
+                        const eventObj = Graphics.eventsMap.get(id)
+                        if(eventObj) {
+                            eventObj.onClikc(this, id, e)
+                        }
+                    }
+                })
+                Graphics.eventSourceIdsSet.add(sourceId)
+            }
         })
-
     }
     // 图形名称（关联 图层和数据源ID名称）
     getName() {
@@ -413,7 +503,7 @@ export class Graphics {
         }
         if(type === 'fill') {
             paint = {
-                "fill-color": ['case', ['to-boolean', ['feature-state', 'hover']], 'red', ['get', 'color']],
+                "fill-color": ['case', ['to-boolean', ['feature-state', 'hover']], ['get', 'hoverColor'], ['get', 'color']],
                 "fill-opacity": ['get', 'opacity'],
                 "fill-outline-color": ['get', 'outLineColor'],
             } as FillPaint 
@@ -425,7 +515,7 @@ export class Graphics {
         if(type === 'line') {
             paint = {
                 'line-blur': ['get', 'blur'],
-                "line-color": ['case', ['to-boolean', ['feature-state', 'hover']], 'red', ['get', 'color']],
+                "line-color": ['case', ['to-boolean', ['feature-state', 'hover']], ['get', 'hoverColor'], ['get', 'color']],
                 "line-dasharray": ['get', 'dasharray'],
                 "line-opacity": ['get', 'opacity'],
                 'line-width': ['get', 'lineWidth'],

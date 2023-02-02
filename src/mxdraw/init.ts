@@ -64,6 +64,16 @@ export class MxMap{
   public gl:WebGLRenderingContext | undefined = void 0;
   public cadLocation1: THREE.Vector3 = new THREE.Vector3();
   public cadLocation2: THREE.Vector3 = new THREE.Vector3()
+  
+  // mapOrigin     图纸中的中心在地址上的位置，墨卡托坐标坐标
+  public mapOrigin: THREE.Vector3 = new THREE.Vector3()
+
+  // cadOrigin  CAD图纸中的中心中，CAD图纸单位
+  public cadOrigin: THREE.Vector3 = new THREE.Vector3()
+
+  // cad图上一个绘图单位，对应map 墨卡托坐标坐标中的长度.
+  public mapLenInCADUnits: number = 0
+
   public elevation: number = 0
   public customLayer:object = {};
   public mxObj: MxDrawObject | null = null;
@@ -94,8 +104,10 @@ export class MxMap{
 
 }
 
-
-export async function init(map: Map, origin: [number, number], kilometers:number = 1,cadFile:string="empty.dwg" ) {
+// origin     图纸中的中心在地址上的位置，单位经纬度
+// cadOrigin  CAD图纸中的中心中，CAD图纸单位
+// meterInCADUnits 一个CAD绘图单位，是现实中多少米.
+export async function init(map: Map, origin: [number, number], cadOrigin:[number,number],meterInCADUnits:number,cadFile:string="empty.dwg" ) {
 
   return new Promise<MxMap>((resolve, reject)=> {
     let mxMap = new MxMap()
@@ -114,11 +126,18 @@ export async function init(map: Map, origin: [number, number], kilometers:number
     let lDistForM = point.meterInMercatorCoordinateUnits();
     
     // 通过传入的 kilometers（公里） 数值决定该cad图纸在现实中的范围是几公里
-    let lCADArea = 1000 * lDistForM * kilometers;
+    //let lCADArea = 1000 * lDistForM * kilometers;
    
     // 从而确定cad图上的具体位置
-    mxMap.cadLocation1 = new THREE.Vector3(point.x - lCADArea / 2, point.y - lCADArea, point.z);
-    mxMap.cadLocation2 = new THREE.Vector3(point.x + lCADArea, point.y + lCADArea / 2, point.z);
+    //mxMap.cadLocation1 = new THREE.Vector3(point.x - lCADArea / 2, point.y - lCADArea, point.z);
+    //mxMap.cadLocation2 = new THREE.Vector3(point.x + lCADArea, point.y + lCADArea / 2, point.z);
+
+    mxMap.mapOrigin = new THREE.Vector3(point.x, point.y, point.z);
+    mxMap.cadOrigin = new THREE.Vector3(cadOrigin[0], cadOrigin[1], 0);
+
+    // cad图上一个绘图单位，对应map 墨卡托坐标坐标中的长度.
+    mxMap.mapLenInCADUnits = meterInCADUnits * lDistForM;
+
     
     // mapbox创建一个自定义图层
     let customLayer: mapboxgl.CustomLayerInterface = {

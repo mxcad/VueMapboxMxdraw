@@ -46,7 +46,7 @@ function loadImg(urls: { [x: string]: string }) {
 
 class Person {
     // 在地图上的位置
-    lnglat: [number, number];
+    lnglat: turf.helpers.Position | [number, number];
     // 人员图标 标记对象
     marker!: mapboxgl.Marker;
     // 方向x，y不同的偏移角度
@@ -58,7 +58,7 @@ class Person {
         [x: string]: any
     } = {}
     id: string | number;
-    constructor(id: string | number, lnglat: [number, number] = [0, 0]) {
+    constructor(id: string | number, lnglat: turf.helpers.Position | [number, number] = [0, 0]) {
         let map = MxMapBox.getMap();
         this.lnglat = lnglat
         this.id = id
@@ -72,7 +72,7 @@ class Person {
         this.marker = new mapboxgl.Marker(box).setLngLat(lnglat as mapboxgl.LngLatLike).addTo(map).setPopup(new mapboxgl.Popup().setText(id + '号'))
     }
     // 计算点是否在多边形内
-    calculateWhetherThePointIsInsideThePolygon(lnglat: [number, number], scopeOfActivities: any[]) {
+    calculateWhetherThePointIsInsideThePolygon(lnglat: turf.helpers.Position | [number, number], scopeOfActivities: any[]) {
         // 表示点的位置
         const pt = turf.point(lnglat)
         let poly: any
@@ -101,11 +101,11 @@ export default async function Mx_Personnel_positioning() {
     const { roadWireFrame, intersectionWireFrame, borderWireFrame, markedPoint } = await getMapCadDwgJSON()
     // 道路的多边形区域的geojson数据
     roadWireFrame.push(roadWireFrame[0])
-    const roadGeoJson = turf.polygon([convertDrawingCoordinatesToGeoCoordinates(roadWireFrame)])
+    const roadGeoJson = turf.polygon([convertDrawingCoordinatesToGeoCoordinates(roadWireFrame)]) as any
 
     //  道路交叉口的多边形区域的geojson数据
     intersectionWireFrame.push(intersectionWireFrame[0])
-    const roadCrossingGeoJson = turf.polygon([convertDrawingCoordinatesToGeoCoordinates(intersectionWireFrame)])
+    const roadCrossingGeoJson = turf.polygon([convertDrawingCoordinatesToGeoCoordinates(intersectionWireFrame)]) as any
 
     // 创建线段拉伸
     function createFence3D() {
@@ -119,11 +119,11 @@ export default async function Mx_Personnel_positioning() {
         // 每个缩放级别添加一个图层缓冲数据
         const lineBuffer = turf.buffer(linesGeoJson, 1, {
             units: 'meters'
-        });
+        }) as any;
 
         map.addSource('lineBufferSource', {
             'type': 'geojson',
-            'data': lineBuffer
+            'data': lineBuffer 
         });
 
         map.addLayer({
@@ -167,7 +167,7 @@ export default async function Mx_Personnel_positioning() {
             "type": "symbol",
             "source":{
                 type: "geojson",
-                data: pointsGeojson
+                data: pointsGeojson as any
             },
             "layout": {
                 "icon-image": ['get', 'icon'],
@@ -188,7 +188,7 @@ export default async function Mx_Personnel_positioning() {
             pointsGeojson.features.forEach((feature:any, index: number) => {
                 feature.properties.description ="标记点" + index + "的值:" + Math.random().toFixed(2)
             })
-            geoJSONSource.setData(pointsGeojson)
+            geoJSONSource.setData(pointsGeojson as any)
            
         }
         guiParims.intervalId = setInterval(fun, 2000)
@@ -201,7 +201,7 @@ export default async function Mx_Personnel_positioning() {
     })
 
     // 创建人员
-    function createPerson(lnglat: [number, number], id: number | string) {
+    function createPerson(lnglat: turf.helpers.Position, id: number | string) {
         // 点的标记
         const person = new Person(id, lnglat)
         // 是否在路段范围内
@@ -212,18 +212,13 @@ export default async function Mx_Personnel_positioning() {
     }
 
     //  人员的初始位置
-    let lnglats: [number, number][] = [
-        [116.38721368976792, 39.90895887734885],
-        [116.38755759657698, 39.90911537474369],
-        [116.38728253472476, 39.909046874017434],
-        [116.38666052904449, 39.90351283569427],
-        [116.38671546568116, 39.903204523405265],
-        [116.3872127867993, 39.90280304992808],
-        [116.38738977737233, 39.90484641880309],
-        [116.3880853509587, 39.903329350910866],
-        [116.38729101891363, 39.90497161526105],
-        [116.3896933890041, 39.90336650664776]
-    ]
+    let lnglats: turf.helpers.Position[] = []
+    const bbox = turf.bbox(roadCrossingGeoJson)
+    
+    for(let i=0; i < 10; i++) {
+        lnglats.push(turf.randomPosition(bbox))
+    }
+    
 
     // 表示人员的对象集合
     let markers: Person[]
@@ -311,7 +306,7 @@ export default async function Mx_Personnel_positioning() {
             // 如果有人员正在交叉路径经过
             if (markers.some(v => v.useData.isItAtAnIntersection)) {
                 if (!popup) {
-                    popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false }).setText(`有人进入交叉路口...`).addTo(map).setLngLat([116.38699130003107, 39.90369033211135])
+                    popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false }).setText(`有人进入交叉路口...`).addTo(map).setLngLat(roadCrossingGeoJson.geometry.coordinates[0][0] as mapboxgl.LngLatLike)
                     popup.addClassName('mx_popup')
                 } else {
                     popup.removeClassName('none')

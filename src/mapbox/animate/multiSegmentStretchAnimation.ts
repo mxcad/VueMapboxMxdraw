@@ -30,7 +30,7 @@ export function multiSegmentStretchAnimation() {
         }, {
             id: index
         })
-    }))
+    })) as any
 
 
     map.addLayer({

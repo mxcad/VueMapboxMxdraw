@@ -11,7 +11,6 @@ import { Map } from "mapbox-gl"
 import { LineStringInfoControl as _LineStringInfoControl,  MultiLineInfoControl as _MultiLineInfoControl, BaseEditableInfoControl } from '@wabson/mapbox-gl-feature-info';
 import { InfoControlOptions } from "./types";
 import * as DrawConstants from '@mapbox/mapbox-gl-draw/src/constants';
-import * as turf from "@turf/turf"
 // 绘制的图形的一些信息展示(线)
 export class LineStringInfoControl extends _LineStringInfoControl {
     constructor(optios: InfoControlOptions) {
@@ -134,20 +133,6 @@ export class MultiLineInfoControl extends _MultiLineInfoControl {
             },
             ...optios.editActions
         ]
-    }
-    // 重写内部方法
-    orderFeaturesByDistanceToAnother() {
-        const selectedFeatures = this.drawControl.getSelected().features;
-        const coordinates = selectedFeatures.map((feature:any) => feature.geometry.coordinates);
-        if(coordinates.length > 1) {
-            const joiningDistances = [
-                turf.length(turf.lineString([coordinates[0][coordinates[0].length - 1], coordinates[1][0]])),
-                turf.length(turf.lineString([coordinates[1][coordinates[1].length - 1], coordinates[0][0]]))
-            ];
-            return (joiningDistances[0] <= joiningDistances[1] ?
-                [ selectedFeatures[0], selectedFeatures[1] ] : [ selectedFeatures[1], selectedFeatures[0] ]);
-        }
-        
     }
     // 判断是不是多线段
     isSupportedFeatures(features: any) {

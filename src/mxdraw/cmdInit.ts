@@ -80,6 +80,11 @@ import { isolineAnalyzing } from "@/mapbox/calculate/isolineAnalyzing"
 import { bufferCalculation } from "@/mapbox/calculate/bufferCalculation"
 import Mx_L7_Bubble_Animation from "@/L7/Mx_L7_Bubble_Animation"
 import { Mx_Deck_CompositeLayer } from "@/deckgl/Mx_Deck_CompositeLayer"
+import { drawingNotation } from "@/mapbox/draw/drawingNotation"
+import { dotSymbolAnimation } from "@/mapbox/animate/dotSymbolAnimation"
+import { webGlLayer } from "@/mapbox/layer/webGlLayer"
+import { DivOverlayTest } from "@/mapbox/draw/DivOverlay"
+import { SvgOverlayTest } from "@/mapbox/draw/SvgOverlay"
 
 
 
@@ -163,6 +168,9 @@ export function cmdInit() {
     MxFun.addCommand('heatmapLayer', heatmapLayer)    
     MxFun.addCommand('radarLayer', radarLayer)
     MxFun.addCommand('skyLayer', skyLayer)
+    MxFun.addCommand('webGlLayer', webGlLayer)
+
+    
    
     // 动画
     MxFun.addCommand('circleAnimate', circleAnimate)  
@@ -173,11 +181,14 @@ export function cmdInit() {
     MxFun.addCommand('multiSegmentStretchAnimation', multiSegmentStretchAnimation)
     MxFun.addCommand('iconPathAnimation', iconPathAnimation)
     MxFun.addCommand('customIconAnimation', customIconAnimation)
+    MxFun.addCommand('dotSymbolAnimation', dotSymbolAnimation)
 
+    
     // 图形
     MxFun.addCommand('MxCircleTest', MxCircleTest) 
     MxFun.addCommand('MxCurveTest', MxCurveTest) 
     MxFun.addCommand('MxEllipseTest', MxEllipseTest) 
+    MxFun.addCommand('drawingNotation', drawingNotation)
 
     // 点标记
     MxFun.addCommand('apertureOfBreath', apertureOfBreath) 
@@ -204,5 +215,9 @@ export function cmdInit() {
     
 
     // 右键菜单
-    MxFun.addCommand('rightClickMenu', rightClickMenu)     
+    MxFun.addCommand('rightClickMenu', rightClickMenu) 
+
+    // div
+    MxFun.addCommand('DivOverlayTest', DivOverlayTest) 
+    MxFun.addCommand('SvgOverlayTest', SvgOverlayTest) 
 }

@@ -25,9 +25,6 @@ export interface MxCurveDefaultOptions extends GraphicsDefaultOptions {
 
 // 曲线
 export class MxCurve extends Graphics {
-    static FeatureCollectionExtrusion = turf.featureCollection([])
-    static FeatureCollectionFill = turf.featureCollection([])
-    static FeatureCollectionLine = turf.featureCollection([])
     constructor(options: MxCurveOptions) {
         if(!options.center) options.center = []
         if(!options.radius) options.radius = 0.1
@@ -40,17 +37,16 @@ export class MxCurve extends Graphics {
     }
 
     getCoordinates(options: MxCurveDefaultOptions) {
-        if(!this._map) return
         let { type, lineWidth, isExtrusion, coordinates } = options
         // 类型判断 
         const isFill = type === 'fill', isLine = type === 'line'
        
-        this.geojson = turf.bezierSpline(turf.lineString(coordinates as turf.helpers.Position[]));
-        let _coordinates:turf.helpers.Position[] | turf.helpers.Position[][] = this.geojson.geometry.coordinates
+        this.geojson = turf.bezierSpline(turf.lineString(coordinates as turf.helpers.Position[]) as any);
+        let _coordinates = (this.geojson.geometry as any).coordinates
         // 2.判断填充 ？ 生成对应geojson
-        if (isFill) _coordinates = [turf.bezierSpline(turf.lineString([..._coordinates,  _coordinates[0]] as turf.helpers.Position[])).geometry.coordinates]
+        if (isFill) _coordinates = [turf.bezierSpline(turf.lineString([..._coordinates,  _coordinates[0]]) as any).geometry.coordinates]
         // 3.判断 线 && 拉伸 
-        if (isLine && isExtrusion) (_coordinates = this._map.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
+        if (isLine && isExtrusion) (_coordinates = this.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
 
         return _coordinates
     }

@@ -82,7 +82,7 @@ export const DrawRectangle = {
         this.updateUIClasses({ mouse: Constants.cursors.NONE });
         doubleClickZoom.enable(this);
         this.activateUIButton();
-        if (this.getFeature(rectangle.id) === undefined) return;
+        if (this.getFeature(rectangle.id) === void 0) return;
         rectangle.removeCoordinate(`0.${currentVertexPosition}`);
         if (rectangle.isValid()) {
             this.map.fire(Constants.events.CREATE, {

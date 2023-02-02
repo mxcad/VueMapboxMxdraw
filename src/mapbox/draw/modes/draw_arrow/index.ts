@@ -106,7 +106,7 @@ export const DrawArrow = {
         }
         this.activateUIButton();
 
-        if (this.getFeature(arrow.id) === undefined) return;
+        if (this.getFeature(arrow.id) === void 0) return;
 
         if (arrow.isValid()) {
             this.map.fire(Constants.events.CREATE, {
@@ -242,7 +242,7 @@ export const DrawBezierArrow = {
     
         this.activateUIButton();
     
-        if (this.getFeature(bezierArrow.id) === undefined) return;
+        if (this.getFeature(bezierArrow.id) === void 0) return;
     
         if (bezierArrow.isValid()) {
             this.map.fire(Constants.events.CREATE, {

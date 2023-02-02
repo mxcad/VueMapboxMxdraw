@@ -329,6 +329,10 @@ export default defineComponent({
               title: "天空图层",
               cmd: "skyLayer",
             },
+            {
+              title: "WebGl图层",
+              cmd: "webGlLayer"
+            }
           ],
         },
         {
@@ -367,6 +371,10 @@ export default defineComponent({
             {
               title: "自定义图标动画",
               cmd: "customIconAnimation"
+            },
+            {
+              title: "点符合动画",
+              cmd: "dotSymbolAnimation"
             }
           ]
         },
@@ -386,6 +394,10 @@ export default defineComponent({
             {
               title: "椭圆",
               cmd: "MxEllipseTest"
+            },
+            {
+              title: "图形批注",
+              cmd: "drawingNotation"
             }
           ]
         },
@@ -441,6 +453,20 @@ export default defineComponent({
             {
               title: "点标记Marker聚合",
               cmd: 'pointMarkerAggregation'
+            }
+          ]
+        },
+        {
+          title: "div",
+          cmd: "DivOverlayTest",
+          children: [
+            {
+              title: "div测试",
+              cmd: "DivOverlayTest"
+            },
+            {
+              title: "svg测试",
+              cmd: "SvgOverlayTest"
             }
           ]
         },

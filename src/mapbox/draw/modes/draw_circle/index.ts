@@ -89,7 +89,7 @@ export const DrawCircle = {
         this.updateUIClasses({ mouse: Constants.cursors.NONE });
         doubleClickZoom.enable(this);
         this.activateUIButton();
-        if (this.getFeature(circle.id) === undefined) return;
+        if (this.getFeature(circle.id) === void 0) return;
         circle.removeCoordinate(`0.${currentVertexPosition}`);
         if (circle.isValid()) {
             this.map.fire(Constants.events.CREATE, {

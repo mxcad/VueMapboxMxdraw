@@ -45,7 +45,6 @@ function createCavans(width: number, height: number) {
 const _project = _Map.prototype.project
 // 扩展重写Map类
 export class Map extends _Map {
-
     // projectEx
     // 用于计算lnglat.alt（高度）
     projectEx(t:mapboxgl.LngLat, e:number) {
@@ -267,7 +266,7 @@ export class Map extends _Map {
         if (path.length < 2) {
             return []
         }
-        const line = turf.lineString(path)
+        const line = turf.lineString(path) as any
         const offsetLine1 = turf.lineOffset(line, offset, { units: "meters" })
         const offsetLine2 = turf.lineOffset(line, -offset, { units: "meters" })
         const points = [...offsetLine1.geometry.coordinates, ...offsetLine2.geometry.coordinates.reverse(), offsetLine1.geometry.coordinates[0]]

@@ -31,9 +31,6 @@ export interface MxCircleDefaultOptions extends GraphicsDefaultOptions {
 
 // 圆
 export class MxCircle extends Graphics {
-    static FeatureCollectionExtrusion = turf.featureCollection([])
-    static FeatureCollectionFill = turf.featureCollection([])
-    static FeatureCollectionLine = turf.featureCollection([])
     declare options: MxCircleDefaultOptions
     constructor(options: MxCircleOptions) {
         if(!options.center) options.center = []
@@ -48,7 +45,6 @@ export class MxCircle extends Graphics {
     }
 
     getCoordinates(options: MxCircleDefaultOptions) {
-        if(!this._map) return
         let { center, radius, startAngle, endAngle, type, lineWidth, isExtrusion } = options
         // 类型判断 
         const isFill = type === 'fill', isLine = type === 'line'
@@ -56,12 +52,12 @@ export class MxCircle extends Graphics {
         // 1.创建初始圆弧
         this.geojson = turf.lineArc(center, radius, startAngle, endAngle)
         // 1.1 保存初始坐标
-        let _coordinates:turf.helpers.Position[] | turf.helpers.Position[][] = this.geojson.geometry.coordinates
+        let _coordinates:any = (this.geojson.geometry as any).coordinates
         
         // 2.判断填充 ？ 生成对应geojson
         if (isFill) _coordinates = (Math.abs(endAngle - startAngle) === 360 ? [_coordinates] : [[center, ..._coordinates, center]]);
         // 3.判断 线 && 拉伸 
-        if (isLine && isExtrusion) (_coordinates = this._map.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
+        if (isLine && isExtrusion) (_coordinates = this.polylineToPolygon(_coordinates as turf.helpers.Position[], lineWidth as number))
 
         return _coordinates
     }
