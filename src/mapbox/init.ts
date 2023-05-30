@@ -20,7 +20,7 @@ import * as THREE from "three";
 import { loadCoreCode, MxFun } from "mxdraw";
 import { Mx_CADGISDemo } from "./demo/Mx_cadandgis";
 
-//export let map: Map
+// export let map: Map
 let map: Map;
 let mxMap: MxMap;
 
@@ -183,12 +183,12 @@ export namespace MxMapBox {
         }
 
         map = new Map(mapParam);
-  
+
         // 监听地图样式加载
         map.on("style.load", async () => {
             // 加载用于图层分隔的空图层 (层级优先: 点 > 线 > 面 )
             map.addGroupLayer();
-         
+
             let cadFile: string = param.cadFile;
             if (!cadFile) {
                 cadFile = "empty.dwg";
@@ -196,7 +196,7 @@ export namespace MxMapBox {
 
             // 初始化图纸显示
             mxMap = await mxDrawInit(map, ptMapOrigin, ptCADOrigin, meterInCADUnits, cadFile);
-            
+
             if (param.call) {
                 param.call(map, mxMap);
             }
@@ -214,7 +214,7 @@ function getQueryString(name: string): string {
 // 初始化 mapbox
 export function init(cmd?: string) {
     let autoInit = true;
-   
+
     if (!cmd) {
         // 可改通过地址参数，启动相应demo.
         // http://localhost:8088/?cmd=Mx_Personnel_positioning
@@ -227,7 +227,7 @@ export function init(cmd?: string) {
         }
 
         if (!autoInit) {
-            
+
             loadCoreCode().then(() => {
                 MxFun.addCommand("Mx_CADGISDemo", Mx_CADGISDemo);
                 MxFun.sendStringToExecute(cmd as string);
@@ -235,7 +235,7 @@ export function init(cmd?: string) {
 
             return;
         }
-      
+
     }
 
     //  图纸中的中心在地址上的位置，单位经纬度
@@ -244,7 +244,7 @@ export function init(cmd?: string) {
     //  CAD图纸中的中心中，CAD图纸单位
     let ptCADOrigin: [number, number] = [578534.364205,411688.892661];
 
-     // 一个CAD绘图单位，是现实中多少米.
+    // 一个CAD绘图单位，是现实中多少米.
     let meterInCADUnits = 0.001;
 
     let cadFile = "/demo/buf/mapcad.dwg";
@@ -254,11 +254,11 @@ export function init(cmd?: string) {
         meterInCADUnits: meterInCADUnits,
         cadFile: cadFile,
         call: async () => {
-       
+
             // 拿到图纸的一些数据(数据由后端获取图纸数据并返回对应的json数据)
             const data = await fetch("./demo/mapcad.dwg.json");
             const { borderWireFrame } = await data.json();
-       
+
             // 拿到边框的线框点数据
             const _borderPoints = borderWireFrame.map((pt: { x: number; y: number; z: number }) => {
                 return new THREE.Vector3(pt.x, pt.y, pt.z);
@@ -317,7 +317,6 @@ export function init(cmd?: string) {
                 // console.log(JSON.stringify(points))
             });
 
-            
             if (cmd) {
                 console.log(cmd);
                 MxFun.sendStringToExecute(cmd);
